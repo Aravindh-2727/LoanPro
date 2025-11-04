@@ -5,7 +5,7 @@ console.log("👤 Customer Dashboard Loaded");
 // customer.js - UPDATE FIRST LINE ONLY
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? "http://localhost:5000" 
-    : "https://loanpro-backend.onrender.com";
+    : "const API_BASE = "https://loanpro-backend-9ndm.onrender.com";";
 
 // REST OF YOUR EXISTING customer.js CODE REMAINS EXACTLY THE SAME
 // Check if customer is logged in
