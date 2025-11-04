@@ -1,170 +1,279 @@
-// script.js - Update the API_BASE declaration
+// script.js - UPDATED FOR DEPLOYMENT
+console.log("🔧 Script.js loaded");
+
+// Define API_BASE for deployment - UPDATED TO PREVENT CONFLICT
 const MAIN_API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? "http://localhost:5000" 
     : "https://loanpro-backend-t41k.onrender.com";
 
-console.log("🌐 Using API Base:", API_BASE);
+console.log("🌐 API Base URL:", MAIN_API_BASE);
 
-// Global State
-let currentPage = "home";
+// 🧭 Navigation Elements
+const loginSection = document.getElementById("loginSection");
+const roleSelection = document.getElementById("roleSelection");
+const ownerLoginSection = document.getElementById("ownerLoginSection");
+const customerLoginSection = document.getElementById("customerLoginSection");
+const ownerDashboard = document.getElementById("ownerDashboard");
+const customerDashboard = document.getElementById("customerDashboard");
 
-// DOM Elements
-const homePage = document.getElementById("homePage");
-const customerLoginPage = document.getElementById("customerLoginPage");
-const ownerLoginPage = document.getElementById("ownerLoginPage");
-const homeStats = document.getElementById("homeStats");
+// 🔐 Owner Login Elements
+const ownerLoginBtn = document.getElementById("ownerLoginBtn");
+const ownerUsernameInput = document.getElementById("ownerUsername");
+const ownerPasswordInput = document.getElementById("ownerPassword");
+const ownerLogoutBtn = document.getElementById("ownerLogoutBtn");
 
-// ✅ Check server & database connection
-async function checkServerConnection() {
-  try {
-    console.log("🔍 Checking server connection...");
-    const response = await fetch(`${API_BASE}/api/health`);
-    const data = await response.json();
-    console.log("✅ Server:", data.status);
-    console.log("📊 Database:", data.database);
-    return true;
-  } catch (error) {
-    console.error("❌ Cannot connect to backend:", error);
-    return false;
-  }
-}
+// 👤 Customer Login Elements
+const customerLoginBtn = document.getElementById("customerLoginBtn");
+const customerPhoneInput = document.getElementById("customerPhone");
 
-// ✅ Initialize event listeners
-function initializeEventListeners() {
-  document.getElementById("homeLink")?.addEventListener("click", showHomePage);
-  document.getElementById("customerLoginLink")?.addEventListener("click", showCustomerLogin);
-  document.getElementById("ownerLoginLink")?.addEventListener("click", showOwnerLogin);
-  document.getElementById("backFromCustomerLogin")?.addEventListener("click", showHomePage);
-  document.getElementById("backFromOwnerLogin")?.addEventListener("click", showHomePage);
-  document.getElementById("customerLoginBtn")?.addEventListener("click", loginCustomer);
-  document.getElementById("ownerLoginBtn")?.addEventListener("click", loginOwner);
-}
+// Role Selection Buttons
+const ownerRoleBtn = document.getElementById("ownerRoleBtn");
+const customerRoleBtn = document.getElementById("customerRoleBtn");
+const backToRoleBtn = document.getElementById("backToRoleBtn");
 
-// ✅ Page Switch Functions
-function hideAllPages() {
-  const pages = [homePage, customerLoginPage, ownerLoginPage];
-  pages.forEach(page => {
-    if (page) page.classList.add("hidden");
-  });
-}
-
-function showHomePage() {
-  hideAllPages();
-  if (homePage) homePage.classList.remove("hidden");
-  loadHomeStats();
-}
-
-function showCustomerLogin() {
-  hideAllPages();
-  if (customerLoginPage) customerLoginPage.classList.remove("hidden");
-}
-
-function showOwnerLogin() {
-  hideAllPages();
-  if (ownerLoginPage) ownerLoginPage.classList.remove("hidden");
-}
-
-// ✅ Customer Login
-async function loginCustomer(e) {
-  if (e) e.preventDefault();
-  
-  const phoneInput = document.getElementById("customerPhone");
-  const phone = phoneInput?.value.trim();
-  
-  if (!phone) {
-    alert("Enter your phone number!");
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/customer/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone }),
+// ✅ Role Selection
+if (ownerRoleBtn) {
+    ownerRoleBtn.addEventListener("click", () => {
+        loginSection.classList.add("hidden");
+        roleSelection.classList.add("hidden");
+        ownerLoginSection.classList.remove("hidden");
     });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "Invalid phone number");
-    }
-
-    const data = await res.json();
-    localStorage.setItem("loggedInCustomer", JSON.stringify(data));
-    window.location.href = "customer.html";
-    
-  } catch (err) {
-    console.error("❌ Login error:", err);
-    alert(err.message);
-  }
 }
 
-// ✅ Owner Login
-async function loginOwner(e) {
-  if (e) e.preventDefault();
-  
-  const email = document.getElementById("ownerEmail")?.value;
-  const password = document.getElementById("ownerPassword")?.value;
-
-  if (!email || !password) {
-    alert("Enter email and password!");
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/owner/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+if (customerRoleBtn) {
+    customerRoleBtn.addEventListener("click", () => {
+        loginSection.classList.add("hidden");
+        roleSelection.classList.add("hidden");
+        customerLoginSection.classList.remove("hidden");
     });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "Login failed");
-    }
-
-    const data = await res.json();
-    alert("✅ Login successful!");
-    window.location.href = "owner.html";
-    
-  } catch (err) {
-    console.error("Owner login error:", err);
-    alert(err.message);
-  }
 }
 
-// ✅ Load Home Stats
-async function loadHomeStats() {
-  try {
-    const res = await fetch(`${API_BASE}/api/analytics`);
-    if (!res.ok) throw new Error("Failed to fetch analytics");
-    
-    const data = await res.json();
-
-    if (!homeStats) return;
-
-    homeStats.innerHTML = `
-      <div class="stat-card">
-        <i class="fas fa-users fa-2x" style="color: #3498db;"></i>
-        <div class="stat-title">Total Customers</div>
-        <div class="stat-value">${data.totalCustomers}</div>
-      </div>
-      <div class="stat-card">
-        <i class="fas fa-money-bill-wave fa-2x" style="color: #e74c3c;"></i>
-        <div class="stat-title">Total Loan Amount</div>
-        <div class="stat-value">₹${data.totalLoanAmount}</div>
-      </div>
-    `;
-  } catch (err) {
-    console.error("❌ Error loading home stats:", err);
-    if (homeStats) {
-      homeStats.innerHTML = `<p>Unable to load statistics</p>`;
-    }
-  }
+if (backToRoleBtn) {
+    backToRoleBtn.addEventListener("click", () => {
+        ownerLoginSection.classList.add("hidden");
+        customerLoginSection.classList.add("hidden");
+        roleSelection.classList.remove("hidden");
+    });
 }
 
-// ✅ On Page Load
+// ✅ Owner Login Functionality
+if (ownerLoginBtn) {
+    ownerLoginBtn.addEventListener("click", async () => {
+        const username = ownerUsernameInput.value.trim();
+        const password = ownerPasswordInput.value.trim();
+
+        if (!username || !password) {
+            alert("Please enter both username and password");
+            return;
+        }
+
+        try {
+            showLoading("ownerLoginSection", "Logging in...");
+            
+            const res = await fetch(`${MAIN_API_BASE}/api/owner/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                console.log("✅ Owner login successful:", data);
+                
+                // Hide login, show owner dashboard
+                ownerLoginSection.classList.add("hidden");
+                ownerDashboard.classList.remove("hidden");
+                
+                // Load owner dashboard
+                if (typeof loadOwnerDashboard === 'function') {
+                    loadOwnerDashboard();
+                }
+                
+            } else {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Login failed");
+            }
+        } catch (err) {
+            console.error("❌ Owner login error:", err);
+            alert(err.message || "Login failed. Please try again.");
+        } finally {
+            hideLoading("ownerLoginSection");
+        }
+    });
+}
+
+// ✅ Customer Login Functionality
+if (customerLoginBtn) {
+    customerLoginBtn.addEventListener("click", async () => {
+        const phone = customerPhoneInput.value.trim();
+        
+        if (!phone || phone.length < 10) {
+            alert("Please enter a valid phone number (at least 10 digits)");
+            return;
+        }
+
+        try {
+            showLoading("customerLoginSection", "Logging in...");
+            
+            const res = await fetch(`${MAIN_API_BASE}/api/customers/phone/${phone}`);
+            
+            if (!res.ok) {
+                if (res.status === 404) {
+                    throw new Error("Customer not found. Please check your phone number.");
+                }
+                throw new Error(`Login failed: ${res.status}`);
+            }
+            
+            const customer = await res.json();
+            console.log("✅ Customer login successful:", customer);
+            
+            // Hide login, show customer dashboard
+            customerLoginSection.classList.add("hidden");
+            customerDashboard.classList.remove("hidden");
+            
+            // Load customer data if function exists
+            if (typeof loadCustomerData === 'function') {
+                // Set current customer and load data
+                window.currentCustomer = customer;
+                loadCustomerData();
+            }
+            
+        } catch (err) {
+            console.error("❌ Customer login error:", err);
+            alert(err.message || "Login failed. Please try again.");
+        } finally {
+            hideLoading("customerLoginSection");
+        }
+    });
+}
+
+// ✅ Logout Functionality
+if (ownerLogoutBtn) {
+    ownerLogoutBtn.addEventListener("click", () => {
+        ownerDashboard.classList.add("hidden");
+        loginSection.classList.remove("hidden");
+        roleSelection.classList.remove("hidden");
+        
+        // Clear inputs
+        ownerUsernameInput.value = "";
+        ownerPasswordInput.value = "";
+    });
+}
+
+// Customer logout is handled in customer.js
+
+// ✅ Loading Functions
+function showLoading(containerId, message = "Loading...") {
+    const container = document.getElementById(containerId);
+    if (container) {
+        // Remove existing loading indicator if any
+        const existingLoader = container.querySelector('.loading-container');
+        if (existingLoader) {
+            existingLoader.remove();
+        }
+        
+        const loaderHTML = `
+            <div class="loading-container" style="text-align: center; padding: 20px;">
+                <div class="spinner"></div>
+                <p>${message}</p>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', loaderHTML);
+    }
+}
+
+function hideLoading(containerId) {
+    const container = document.getElementById(containerId);
+    if (container) {
+        const loader = container.querySelector('.loading-container');
+        if (loader) {
+            loader.remove();
+        }
+    }
+}
+
+// ✅ Enter Key Support
+if (ownerUsernameInput && ownerPasswordInput) {
+    [ownerUsernameInput, ownerPasswordInput].forEach(input => {
+        input.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                ownerLoginBtn.click();
+            }
+        });
+    });
+}
+
+if (customerPhoneInput) {
+    customerPhoneInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            customerLoginBtn.click();
+        }
+    });
+}
+
+// ✅ Utility Functions for Error Handling
+function showError(containerId, message) {
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.innerHTML = `
+            <div class="error-container">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>${message}</p>
+                <button class="btn btn-primary" onclick="location.reload()">Retry</button>
+            </div>
+        `;
+    }
+}
+
+// ✅ Check Backend Connection on Load
+async function checkBackendConnection() {
+    try {
+        console.log("🔌 Checking backend connection...");
+        const res = await fetch(`${MAIN_API_BASE}/api/health`);
+        if (res.ok) {
+            console.log("✅ Backend connection successful");
+            return true;
+        } else {
+            console.warn("⚠️ Backend responded with non-OK status:", res.status);
+            return false;
+        }
+    } catch (err) {
+        console.error("❌ Backend connection failed:", err);
+        return false;
+    }
+}
+
+// 🚀 Initialize Application
 window.addEventListener("DOMContentLoaded", async () => {
-  console.log("🚀 Frontend loaded");
-  initializeEventListeners();
-  showHomePage();
+    console.log("🚀 Frontend loaded");
+    
+    // Check backend connection
+    const isBackendConnected = await checkBackendConnection();
+    
+    if (!isBackendConnected) {
+        console.warn("⚠️ Backend may be unavailable - some features may not work");
+    }
+    
+    // Show login section by default
+    if (loginSection) {
+        loginSection.classList.remove("hidden");
+    }
+    if (roleSelection) {
+        roleSelection.classList.remove("hidden");
+    }
+    
+    // Hide all other sections
+    [ownerLoginSection, customerLoginSection, ownerDashboard, customerDashboard].forEach(section => {
+        if (section) section.classList.add("hidden");
+    });
 });
+
+// Global error handler
+window.addEventListener('error', (event) => {
+    console.error('Global error:', event.error);
+});
+
+// Make MAIN_API_BASE available globally for other scripts if needed
+window.MAIN_API_BASE = MAIN_API_BASE;
