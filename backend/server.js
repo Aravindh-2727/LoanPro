@@ -3,13 +3,12 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
-require('dotenv').config();
 
 const app = express();
 
-// ✅ CORS Configuration - ALLOW ALL ORIGINS FOR DEVELOPMENT
+// ✅ CORS Configuration
 app.use(cors({
-  origin: "*", // Allow all origins during development
+  origin: "*",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Accept"]
@@ -18,9 +17,10 @@ app.use(cors({
 app.use(bodyParser.json());
 app.use(express.json());
 
-// ✅ MongoDB Connection
+// ✅ MongoDB Connection - FIXED FOR RENDER
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://aravindhvinayagam2007_db_user:RXGSMWjV3lSxBjHH@loancluster.xhvqvbf.mongodb.net/loanDB?retryWrites=true&w=majority";
 
+console.log('🔗 MongoDB URI:', MONGODB_URI ? 'Present' : 'Missing');
 console.log('🔗 Connecting to MongoDB...');
 
 mongoose.connect(MONGODB_URI, {
@@ -33,6 +33,7 @@ mongoose.connect(MONGODB_URI, {
 })
 .catch(err => {
     console.log('❌ MongoDB connection error:', err.message);
+    console.log('💡 Check MONGODB_URI environment variable in Render');
 });
 
 // ✅ Schemas
@@ -109,7 +110,6 @@ async function updateLoanStatus(customer) {
         if (totalPaid >= customer.totalLoanAmount && customer.status === 'active') {
             customer.status = 'deactivated';
             await customer.save();
-            console.log(`✅ Loan deactivated for ${customer.name}`);
         }
         
         return customer;
@@ -190,9 +190,7 @@ app.post('/api/owner/add-customer', async (req, res) => {
     const { name, phone, address, loanStartDate, totalLoanAmount, dailyPayment } = req.body;
     
     if (!name || !phone || !address || !loanStartDate || !totalLoanAmount) {
-      return res.status(400).json({ 
-        message: 'All fields are required' 
-      });
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
     const existingCustomer = await Customer.findOne({ phone });
@@ -213,19 +211,13 @@ app.post('/api/owner/add-customer', async (req, res) => {
 
     await newCustomer.save();
     
-    res.status(201).json({ 
-      message: 'Customer added successfully', 
-      customer: newCustomer 
-    });
+    res.status(201).json({ message: 'Customer added successfully', customer: newCustomer });
   } catch (error) {
-    console.error('❌ Add customer error:', error);
+    console.error('Add customer error:', error);
     if (error.code === 11000) {
       return res.status(400).json({ message: 'Phone number already exists' });
     }
-    res.status(500).json({ 
-      message: 'Server error while adding customer',
-      error: error.message 
-    });
+    res.status(500).json({ message: 'Server error while adding customer' });
   }
 });
 
@@ -236,18 +228,12 @@ app.post('/api/customers/:id/payments', async (req, res) => {
         let customer = await Customer.findById(req.params.id);
         if (!customer) return res.status(404).json({ message: 'Customer not found' });
 
-        customer.payments.push({ 
-            date, 
-            amount, 
-            principal: principal || amount
-        });
-        
+        customer.payments.push({ date, amount, principal: principal || amount });
         customer = await updateLoanStatus(customer);
         await customer.save();
 
         res.json({ message: 'Payment added successfully', customer });
     } catch (error) {
-        console.error('Add payment error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -258,9 +244,7 @@ app.put('/api/customers/:id', async (req, res) => {
     const { name, phone, address, loanStartDate, totalLoanAmount, dailyPayment } = req.body;
     
     const customer = await Customer.findById(req.params.id);
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
-    }
+    if (!customer) return res.status(404).json({ message: 'Customer not found' });
 
     customer.name = name;
     customer.phone = phone;
@@ -271,12 +255,9 @@ app.put('/api/customers/:id', async (req, res) => {
 
     await customer.save();
     res.json({ message: 'Customer updated successfully', customer });
-    
   } catch (error) {
     console.error('Update customer error:', error);
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Phone number already exists' });
-    }
+    if (error.code === 11000) return res.status(400).json({ message: 'Phone number already exists' });
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -286,10 +267,8 @@ app.delete('/api/customers/:id', async (req, res) => {
   try {
     const customer = await Customer.findByIdAndDelete(req.params.id);
     if (!customer) return res.status(404).json({ message: 'Customer not found' });
-
     res.json({ message: 'Customer deleted successfully' });
   } catch (error) {
-    console.error('Delete customer error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -306,7 +285,6 @@ app.delete('/api/customers/:customerId/payments/:paymentDate', async (req, res) 
 
     res.json({ message: 'Payment deleted successfully' });
   } catch (error) {
-    console.error('Delete payment error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -332,5 +310,5 @@ app.get('/api/analytics', async (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🌐 Health check: https://loanpro-backend-9ndm.onrender.com/api/health`);
 });
