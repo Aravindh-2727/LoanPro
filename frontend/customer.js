@@ -1,263 +1,282 @@
 // customer.js - UPDATED FOR DEPLOYMENT
 console.log("👤 Customer Dashboard Loaded");
 
-// Define API_BASE for deployment
-// customer.js - UPDATE FIRST LINE ONLY
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+// Define API_BASE for deployment - UPDATED TO PREVENT CONFLICT
+const CUSTOMER_API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? "http://localhost:5000" 
     : "https://loanpro-backend-t41k.onrender.com";
 
 // REST OF YOUR EXISTING customer.js CODE REMAINS EXACTLY THE SAME
-// Check if customer is logged in
-const loggedInCustomer = JSON.parse(localStorage.getItem("loggedInCustomer"));
-// ... continue with all your existing customer.js code ...
+let currentCustomer = null;
+let customerPayments = [];
 
-if (!loggedInCustomer) {
-  alert("No customer logged in!");
-  window.location.href = "index.html";
-} else {
-  loadCustomerDashboard(loggedInCustomer);
+// 🧭 DOM Elements
+const customerDashboard = document.getElementById("customerDashboard");
+const customerLoginSection = document.getElementById("customerLogin");
+const customerPhoneInput = document.getElementById("customerPhone");
+const customerLoginBtn = document.getElementById("customerLoginBtn");
+const customerLogoutBtn = document.getElementById("customerLogoutBtn");
+const customerNameDisplay = document.getElementById("customerName");
+const customerPhoneDisplay = document.getElementById("customerPhoneDisplay");
+const customerAddressDisplay = document.getElementById("customerAddressDisplay");
+const loanAmountDisplay = document.getElementById("loanAmountDisplay");
+const dailyPaymentDisplay = document.getElementById("dailyPaymentDisplay");
+const startDateDisplay = document.getElementById("startDateDisplay");
+const totalPaidDisplay = document.getElementById("totalPaidDisplay");
+const remainingAmountDisplay = document.getElementById("remainingAmountDisplay");
+const paymentProgressFill = document.getElementById("paymentProgressFill");
+const paymentProgressText = document.getElementById("paymentProgressText");
+const paymentHistoryBody = document.getElementById("paymentHistoryBody");
+const daysStatusDisplay = document.getElementById("daysStatusDisplay");
+const customerStatusDisplay = document.getElementById("customerStatusDisplay");
+
+// ✅ Customer Login
+if (customerLoginBtn) {
+    customerLoginBtn.addEventListener("click", async () => {
+        const phone = customerPhoneInput.value.trim();
+        
+        if (!phone || phone.length < 10) {
+            alert("Please enter a valid phone number (at least 10 digits)");
+            return;
+        }
+
+        try {
+            showCustomerLoading("Logging in...");
+            
+            const res = await fetch(`${CUSTOMER_API_BASE}/api/customers/phone/${phone}`);
+            
+            if (!res.ok) {
+                if (res.status === 404) {
+                    throw new Error("Customer not found. Please check your phone number.");
+                }
+                throw new Error(`Login failed: ${res.status}`);
+            }
+            
+            const customer = await res.json();
+            currentCustomer = customer;
+            
+            // Hide login, show dashboard
+            customerLoginSection.classList.add("hidden");
+            customerDashboard.classList.remove("hidden");
+            
+            // Load customer data
+            loadCustomerData();
+            
+        } catch (err) {
+            console.error("❌ Customer login error:", err);
+            alert(err.message || "Login failed. Please try again.");
+            hideCustomerLoading();
+        }
+    });
 }
 
-// ✅ Calculate Customer Status (same as owner dashboard)
-function calculateCustomerStatus(customer) {
-  const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-  
-  // If fully paid, status is deactivated
-  if (totalPaid >= customer.totalLoanAmount) {
-    return { ...customer, calculatedStatus: 'deactivated' };
-  }
-  
-  // Calculate days since loan start
-  const loanStartDate = new Date(customer.loanStartDate);
-  const today = new Date();
-  const daysSinceStart = Math.floor((today - loanStartDate) / (1000 * 60 * 60 * 24));
-  
-  // If more than 100 days and not fully paid, status is pending
-  if (daysSinceStart > 100) {
-    return { ...customer, calculatedStatus: 'pending' };
-  }
-  
-  // Otherwise, status is active
-  return { ...customer, calculatedStatus: 'active' };
-}
-
-// ✅ Calculate Days Status (same as owner dashboard)
-function calculateDaysStatus(customer) {
-  const loanStartDate = new Date(customer.loanStartDate);
-  const today = new Date();
-  const daysSinceStart = Math.floor((today - loanStartDate) / (1000 * 60 * 60 * 24));
-  
-  if (customer.calculatedStatus === 'deactivated') {
-    return { status: 'completed', days: 0 };
-  } else if (customer.calculatedStatus === 'pending') {
-    return { status: 'overdue', days: daysSinceStart - 100 };
-  } else {
-    const daysLeft = Math.max(0, 100 - daysSinceStart);
-    return { status: 'active', days: daysLeft };
-  }
-}
-
-async function loadCustomerDashboard(customer) {
-  document.getElementById("dashboardStatus").textContent = "Loading your dashboard...";
-
-  try {
-    const res = await fetch(`${API_BASE}/api/customers/${customer._id}`);
+// ✅ Load Customer Data
+async function loadCustomerData() {
+    if (!currentCustomer) return;
     
-    if (!res.ok) {
-      throw new Error(`Failed to fetch customer data: ${res.status}`);
+    try {
+        showCustomerLoading("Loading your data...");
+        
+        // Refresh customer data
+        const res = await fetch(`${CUSTOMER_API_BASE}/api/customers/${currentCustomer._id}`);
+        if (!res.ok) throw new Error("Failed to load customer data");
+        
+        const customer = await res.json();
+        currentCustomer = customer;
+        
+        // Update displays
+        customerNameDisplay.textContent = customer.name;
+        customerPhoneDisplay.textContent = customer.phone;
+        customerAddressDisplay.textContent = customer.address;
+        loanAmountDisplay.textContent = `₹${customer.totalLoanAmount.toLocaleString()}`;
+        dailyPaymentDisplay.textContent = `₹${customer.dailyPayment}`;
+        startDateDisplay.textContent = customer.loanStartDate;
+        
+        // Calculate payment totals
+        const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+        const remainingAmount = Math.max(0, customer.totalLoanAmount - totalPaid);
+        const paymentProgress = (totalPaid / customer.totalLoanAmount) * 100;
+        
+        totalPaidDisplay.textContent = `₹${totalPaid.toLocaleString()}`;
+        remainingAmountDisplay.textContent = `₹${remainingAmount.toLocaleString()}`;
+        
+        // Update progress bar
+        paymentProgressFill.style.width = `${paymentProgress}%`;
+        paymentProgressText.textContent = `${paymentProgress.toFixed(1)}% Paid`;
+        
+        // Calculate and display status
+        const customerWithStatus = calculateCustomerStatus(customer);
+        const daysStatus = calculateDaysStatus(customerWithStatus);
+        
+        // Update status displays
+        updateStatusDisplays(customerWithStatus, daysStatus);
+        
+        // Render payment history
+        renderPaymentHistory(customer.payments || []);
+        
+        hideCustomerLoading();
+        
+    } catch (err) {
+        console.error("❌ Error loading customer data:", err);
+        alert("Failed to load your data. Please try again.");
+        hideCustomerLoading();
+    }
+}
+
+// ✅ Calculate Customer Status
+function calculateCustomerStatus(customer) {
+    const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+    
+    // If fully paid, status is deactivated
+    if (totalPaid >= customer.totalLoanAmount) {
+        return { ...customer, calculatedStatus: 'deactivated' };
     }
     
-    const data = await res.json();
+    // Calculate days since loan start
+    const loanStartDate = new Date(customer.loanStartDate);
+    const today = new Date();
+    const daysSinceStart = Math.floor((today - loanStartDate) / (1000 * 60 * 60 * 24));
     
-    // Calculate customer status (same as owner dashboard)
-    const customerWithStatus = calculateCustomerStatus(data);
-    const daysStatus = calculateDaysStatus(customerWithStatus);
-
-    // Calculate total paid and remaining amount
-    const totalPaid = data.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
-    const remainingAmount = Math.max(0, data.totalLoanAmount - totalPaid);
-    const paymentProgress = (totalPaid / data.totalLoanAmount) * 100;
-
-    // Update customer info in the dashboard
-    document.getElementById("customerInfo").innerHTML = `
-      <!-- Owner Contact Card -->
-      <div class="owner-contact-card">
-        <div class="owner-contact-header">
-          <i class="fas fa-headset"></i>
-          <h3>Contact Owner</h3>
-        </div>
-        <div class="owner-phones-container">
-          <a href="tel:8056108207" class="owner-phone-card">
-            <i class="fas fa-phone"></i>
-            <span>8056108207</span>
-          </a>
-          <a href="tel:9342695097" class="owner-phone-card">
-            <i class="fas fa-phone"></i>
-            <span>9342695097</span>
-          </a>
-        </div>
-        <p style="margin-top: 15px; opacity: 0.9; font-size: 0.9rem;">
-          <i class="fas fa-info-circle"></i> Call for payment queries or support
-        </p>
-      </div>
-
-      <h2>Welcome, ${data.name}!</h2>
-      
-      <!-- Pending Warning Banner -->
-      ${customerWithStatus.calculatedStatus === 'pending' ? `
-        <div class="pending-warning-customer" style="background: #fef5e7; color: #744210; padding: 20px; border-radius: var(--border-radius); margin: 20px 0; text-align: center; border-left: 5px solid #d69e2e; border-right: 5px solid #d69e2e;">
-          <i class="fas fa-exclamation-triangle fa-2x" style="color: #d69e2e; margin-bottom: 10px;"></i> 
-          <h3 style="color: #744210; margin: 10px 0;">Payment Overdue!</h3>
-          <p style="margin: 10px 0; font-size: 16px;">Your loan is <strong>${daysStatus.days} days overdue</strong>.</p>
-          <p style="margin: 5px 0; font-size: 14px;">Please contact the loan owner immediately to avoid further issues.</p>
-          <div style="margin-top: 15px; padding: 10px; background: rgba(214, 158, 46, 0.1); border-radius: 8px;">
-            <strong>Contact Owner:</strong> Use the contact numbers above for payment arrangements.
-          </div>
-        </div>
-      ` : ''}
-      
-      <div class="customer-details">
-        <div class="info-grid-customer">
-          <div class="info-item-customer">
-            <div class="info-label"><i class="fas fa-phone"></i> Phone</div>
-            <div class="info-value">${data.phone}</div>
-          </div>
-          <div class="info-item-customer">
-            <div class="info-label"><i class="fas fa-home"></i> Address</div>
-            <div class="info-value">${data.address}</div>
-          </div>
-          <div class="info-item-customer">
-            <div class="info-label"><i class="fas fa-calendar-alt"></i> Loan Start Date</div>
-            <div class="info-value">${data.loanStartDate}</div>
-          </div>
-          <div class="info-item-customer">
-            <div class="info-label"><i class="fas fa-hand-holding-usd"></i> Total Loan Amount</div>
-            <div class="info-value">₹${data.totalLoanAmount}</div>
-          </div>
-          <div class="info-item-customer">
-            <div class="info-label"><i class="fas fa-coins"></i> Daily Payment</div>
-            <div class="info-value">₹${data.dailyPayment}</div>
-          </div>
-          <div class="info-item-customer">
-            <div class="info-label"><i class="fas fa-check-circle"></i> Total Paid</div>
-            <div class="info-value" style="color: var(--success);">₹${totalPaid}</div>
-          </div>
-          <div class="info-item-customer">
-            <div class="info-label"><i class="fas fa-clock"></i> Remaining Amount</div>
-            <div class="info-value" style="color: ${remainingAmount > 0 ? 'var(--danger)' : 'var(--success)'};">₹${remainingAmount}</div>
-          </div>
-          <div class="info-item-customer">
-            <div class="info-label"><i class="fas fa-info-circle"></i> Status</div>
-            <div class="info-value">
-              <span class="status-${customerWithStatus.calculatedStatus}">
-                ${customerWithStatus.calculatedStatus === 'deactivated' ? 
-                  '<i class="fas fa-check-circle"></i> Completed' : 
-                  customerWithStatus.calculatedStatus === 'pending' ? 
-                  '<i class="fas fa-exclamation-triangle"></i> Overdue Pending' : 
-                  '<i class="fas fa-spinner"></i> Active'}
-              </span>
-            </div>
-          </div>
-          <div class="info-item-customer">
-            <div class="info-label"><i class="fas fa-calendar-check"></i> Days Status</div>
-            <div class="info-value">
-              ${daysStatus.status === 'completed' ? 
-                '<span class="status-deactivated"><i class="fas fa-trophy"></i> Loan Completed</span>' :
-                daysStatus.status === 'overdue' ? 
-                `<span class="status-pending"><i class="fas fa-exclamation-circle"></i> Overdue: ${daysStatus.days} days</span>` :
-                `<span class="status-active"><i class="fas fa-clock"></i> ${daysStatus.days} days remaining</span>`
-              }
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      ${customerWithStatus.calculatedStatus === 'active' ? `
-      <div class="progress-section" style="margin: 30px 0;">
-        <h3><i class="fas fa-chart-line"></i> Payment Progress</h3>
-        <div class="progress-bar-customer">
-          <div class="progress-track">
-            <div class="progress-fill-customer" style="width: ${paymentProgress}%;"></div>
-          </div>
-          <div class="progress-text">
-            <span>${paymentProgress.toFixed(1)}% Paid</span>
-            <span>(₹${totalPaid} of ₹${data.totalLoanAmount})</span>
-          </div>
-        </div>
-      </div>
-      ` : ''}
-      
-      ${customerWithStatus.calculatedStatus === 'deactivated' ? `
-      <div class="deactivation-message" style="background: linear-gradient(135deg, var(--success), #2d7d32); color: white; padding: 25px; border-radius: var(--border-radius); text-align: center; margin: 25px 0; box-shadow: var(--shadow-md);">
-        <i class="fas fa-check-circle fa-3x" style="margin-bottom: 15px;"></i>
-        <h3 style="margin: 15px 0;">Loan Successfully Completed!</h3>
-        <p style="font-size: 16px; margin: 10px 0;">Congratulations! You have successfully paid your full loan amount of ₹${data.totalLoanAmount}.</p>
-        <p style="margin: 5px 0;"><strong>Completion Date:</strong> ${new Date().toLocaleDateString()}</p>
-        <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 8px;">
-          <i class="fas fa-star"></i> Thank you for being a valued customer!
-        </div>
-      </div>
-      ` : ''}
-      
-      <div class="payment-history">
-        <h3><i class="fas fa-history"></i> Payment History</h3>
-        <div id="paymentHistoryContainer"></div>
-      </div>
-    `;
-
-    // Render payments
-    renderPaymentHistory(data.payments);
+    // If more than 100 days and not fully paid, status is pending
+    if (daysSinceStart > 100) {
+        return { ...customer, calculatedStatus: 'pending' };
+    }
     
-  } catch (err) {
-    console.error("❌ Error loading customer dashboard:", err);
-    document.getElementById("dashboardStatus").textContent = "Failed to load dashboard. Please try again.";
-  }
+    // Otherwise, status is active
+    return { ...customer, calculatedStatus: 'active' };
 }
 
+// ✅ Calculate Days Status
+function calculateDaysStatus(customer) {
+    const loanStartDate = new Date(customer.loanStartDate);
+    const today = new Date();
+    const daysSinceStart = Math.floor((today - loanStartDate) / (1000 * 60 * 60 * 24));
+    
+    if (customer.calculatedStatus === 'deactivated') {
+        return { status: 'completed', days: 0 };
+    } else if (customer.calculatedStatus === 'pending') {
+        return { status: 'overdue', days: daysSinceStart - 100 };
+    } else {
+        const daysLeft = Math.max(0, 100 - daysSinceStart);
+        return { status: 'active', days: daysLeft };
+    }
+}
+
+// ✅ Update Status Displays
+function updateStatusDisplays(customer, daysStatus) {
+    // Update main status display
+    let statusHTML = '';
+    let statusClass = '';
+    
+    switch (customer.calculatedStatus) {
+        case 'deactivated':
+            statusHTML = '<i class="fas fa-check-circle"></i> Loan Completed';
+            statusClass = 'status-completed';
+            break;
+        case 'pending':
+            statusHTML = `<i class="fas fa-exclamation-triangle"></i> Overdue: ${daysStatus.days} days`;
+            statusClass = 'status-pending';
+            break;
+        default:
+            statusHTML = `<i class="fas fa-clock"></i> ${daysStatus.days} days remaining`;
+            statusClass = 'status-active';
+    }
+    
+    customerStatusDisplay.innerHTML = `<span class="${statusClass}">${statusHTML}</span>`;
+    
+    // Update days status display
+    let daysHTML = '';
+    switch (daysStatus.status) {
+        case 'completed':
+            daysHTML = '<span class="status-completed"><i class="fas fa-trophy"></i> Congratulations! Loan Paid</span>';
+            break;
+        case 'overdue':
+            daysHTML = `<span class="status-pending"><i class="fas fa-exclamation-circle"></i> Overdue by ${daysStatus.days} days</span>`;
+            break;
+        default:
+            daysHTML = `<span class="status-active"><i class="fas fa-calendar-check"></i> ${daysStatus.days} days to complete</span>`;
+    }
+    
+    daysStatusDisplay.innerHTML = daysHTML;
+}
+
+// ✅ Render Payment History
 function renderPaymentHistory(payments) {
-  const container = document.getElementById("paymentHistoryContainer");
-  
-  if (!payments || payments.length === 0) {
-    container.innerHTML = `
-      <div class="no-payments" style="text-align: center; padding: 40px; color: var(--gray-medium);">
-        <i class="fas fa-receipt fa-3x" style="margin-bottom: 15px; opacity: 0.5;"></i>
-        <h4>No Payment History</h4>
-        <p>No payments have been recorded yet.</p>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = `
-    <div class="payment-table-container">
-      <table class="payment-table-customer">
-        <thead>
-          <tr>
-            <th><i class="fas fa-calendar"></i> Date</th>
-            <th><i class="fas fa-money-bill-wave"></i> Amount</th>
-            <th><i class="fas fa-chart-bar"></i> Principal</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${payments.map(payment => `
+    if (!payments || payments.length === 0) {
+        paymentHistoryBody.innerHTML = `
             <tr>
-              <td>${payment.date}</td>
-              <td class="payment-amount">₹${payment.amount}</td>
-              <td class="payment-principal">₹${payment.principal}</td>
+                <td colspan="4" class="no-payments">
+                    <i class="fas fa-receipt"></i>
+                    <div>No payments recorded yet</div>
+                </td>
             </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-    <div class="payment-summary" style="margin-top: 20px; padding: 15px; background: var(--light); border-radius: var(--border-radius); text-align: center;">
-      <strong>Total Payments: ₹${payments.reduce((sum, payment) => sum + payment.amount, 0)}</strong>
-    </div>
-  `;
+        `;
+        return;
+    }
+    
+    // Sort payments by date (newest first)
+    const sortedPayments = [...payments].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    paymentHistoryBody.innerHTML = sortedPayments.map(payment => `
+        <tr>
+            <td>${payment.date}</td>
+            <td class="payment-amount">₹${payment.amount.toLocaleString()}</td>
+            <td class="payment-principal">₹${payment.principal.toLocaleString()}</td>
+            <td class="payment-type">${payment.type || 'Regular'}</td>
+        </tr>
+    `).join('');
 }
 
-// Logout functionality
-document.getElementById("customerLogoutBtn")?.addEventListener("click", () => {
-  localStorage.removeItem("loggedInCustomer");
-  window.location.href = "index.html";
+// ✅ Show Customer Loading
+function showCustomerLoading(message = "Loading...") {
+    const loadingElement = document.getElementById("customerLoading");
+    const loadingText = document.getElementById("customerLoadingText");
+    
+    if (loadingElement && loadingText) {
+        loadingText.textContent = message;
+        loadingElement.classList.remove("hidden");
+    }
+}
+
+// ✅ Hide Customer Loading
+function hideCustomerLoading() {
+    const loadingElement = document.getElementById("customerLoading");
+    if (loadingElement) {
+        loadingElement.classList.add("hidden");
+    }
+}
+
+// ✅ Customer Logout
+if (customerLogoutBtn) {
+    customerLogoutBtn.addEventListener("click", () => {
+        currentCustomer = null;
+        customerPayments = [];
+        
+        // Clear phone input
+        customerPhoneInput.value = "";
+        
+        // Show login, hide dashboard
+        customerDashboard.classList.add("hidden");
+        customerLoginSection.classList.remove("hidden");
+    });
+}
+
+// ✅ Enter key support for login
+if (customerPhoneInput) {
+    customerPhoneInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            customerLoginBtn.click();
+        }
+    });
+}
+
+// 🚀 Initialize Customer Dashboard
+window.addEventListener("DOMContentLoaded", () => {
+    console.log("👤 Customer Dashboard Initialized");
+    
+    // Check if customer is already logged in (from session storage)
+    const savedCustomerId = sessionStorage.getItem('currentCustomerId');
+    if (savedCustomerId) {
+        // Optional: Auto-login functionality can be added here
+    }
 });
