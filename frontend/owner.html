@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Dashboard - LoanPro</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-content">
+      <div class="logo">
+        <i class="fas fa-hand-holding-usd"></i>
+        <span>LoanPro</span>
+      </div>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="#" class="nav-link" id="ownerLogoutBtn">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <div id="ownerDashboard" class="page container">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2><i class="fas fa-tachometer-alt"></i> Owner Dashboard</h2>
+        <button class="btn btn-success" id="addCustomerBtn">
+          <i class="fas fa-plus"></i> Add New Customer
+        </button>
+      </div>
+      
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchCustomer" placeholder="Search customers by name or phone...">
+      </div>
+      
+      <div id="analyticsSection">
+        <h3><i class="fas fa-chart-bar"></i> Analytics</h3>
+        <div class="stats-container">
+          <div class="stat-card">
+            <div class="stat-title">Total Customers</div>
+            <div class="stat-value" id="analyticsTotalCustomers">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Active Loans</div>
+            <div class="stat-value" id="analyticsActiveLoans">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Total Loan Amount</div>
+            <div class="stat-value" id="analyticsTotalLoanAmount">₹0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Total Received</div>
+            <div class="stat-value" id="analyticsAmountReceived">₹0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Active Loans Received</div>
+            <div class="stat-value" id="analyticsActiveLoansReceived">₹0</div>
+          </div>
+        </div>
+      </div>
+
+
+
+
+
+      
+      <!-- Customer List Section -->
+<div id="customerList" class="customer-list-fullwidth">
+  <h3><i class="fas fa-users"></i> All Customers</h3>
+
+
+
+<!---- Add this after the search box and before the analytics section -->
+<div class="customer-list-filters-full">
+    <div class="filter-controls-full">
+        <div class="filter-group-full">
+            <label for="filterStatus"><i class="fas fa-filter"></i> Status:</label>
+            <select id="filterStatus" class="filter-select-full">
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="pending">Pending</option>
+                <option value="deactivated">Completed</option>
+            </select>
+        </div>
+        
+        <div class="filter-group-full">
+            <label for="filterAmount"><i class="fas fa-sort-amount-down"></i> Amount:</label>
+            <select id="filterAmount" class="filter-select-full">
+                <option value="all">All Amounts</option>
+                <option value="high">High Amount (₹50k+)</option>
+                <option value="medium">Medium Amount (₹25k-50k)</option>
+                <option value="low">Low Amount (Below ₹25k)</option>
+            </select>
+        </div>
+        
+        <div class="filter-group-full">
+            <label for="filterDate"><i class="fas fa-calendar"></i> Date:</label>
+            <select id="filterDate" class="filter-select-full">
+                <option value="all">All Dates</option>
+                <option value="recent">Recent (Last 30 days)</option>
+                <option value="old">Older (30+ days)</option>
+            </select>
+        </div>
+        
+        <div class="filter-group-full">
+            <label for="sortBy"><i class="fas fa-sort"></i> Sort By:</label>
+            <select id="sortBy" class="filter-select-full">
+                <option value="name">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="amount">Loan Amount (High-Low)</option>
+                <option value="amount-asc">Loan Amount (Low-High)</option>
+                <option value="date">Start Date (Newest)</option>
+                <option value="date-old">Start Date (Oldest)</option>
+                <option value="days">Days Remaining</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="customer-count-full" id="customerCount">
+        Loading...
+    </div>
+</div>
+
+  <div id="customersContainer">
+    <!-- Customer list will be loaded here -->
+  </div>
+</div>
+
+
+
+
+<div class="customer-list-filters-full">
+    <div class="filter-controls-full">
+        <!-- Existing filter groups... -->
+        
+        <!-- Add Clear Filters button -->
+        <button class="btn btn-secondary btn-sm" onclick="clearAllFilters()" style="white-space: nowrap;">
+            <i class="fas fa-times"></i> Clear Filters
+        </button>
+    </div>
+    
+    <div class="customer-count-full" id="customerCount">
+        Loading...
+    </div>
+</div>
+
+
+
+      <!-- 🧾 Customer Detail View -->
+<div id="customerDetailView" class="hidden">
+  <div class="card">
+    <button id="backToListBtn" class="btn btn-secondary mb-20">
+      <i class="fas fa-arrow-left"></i> Back to List
+    </button>
+    
+    
+
+    <div class="customer-details-section">
+      <h2 id="custName" style="color: var(--primary); margin-bottom: 20px;"></h2>
+      
+      <!-- Pending Warning Banner -->
+      <div id="pendingWarning" class="hidden" style="background: #fef5e7; color: #744210; padding: 20px; border-radius: var(--border-radius); margin: 20px 0; text-align: center; border-left: 5px solid #d69e2e; border-right: 5px solid #d69e2e;">
+        <i class="fas fa-exclamation-triangle fa-2x" style="color: #d69e2e; margin-bottom: 10px;"></i> 
+        <h3 style="color: #744210; margin: 10px 0;">Payment Overdue!</h3>
+        <p style="margin: 10px 0; font-size: 16px;">This loan is <strong id="overdueDays"></strong> days overdue.</p>
+        <p style="margin: 5px 0; font-size: 14px;">Please contact the customer immediately.</p>
+      </div>
+      
+      <!-- Completion Banner -->
+      <div id="completionBanner" class="hidden" style="background: linear-gradient(135deg, var(--success), #2d7d32); color: white; padding: 25px; border-radius: var(--border-radius); text-align: center; margin: 25px 0; box-shadow: var(--shadow-md);">
+        <i class="fas fa-check-circle fa-3x" style="margin-bottom: 15px;"></i>
+        <h3 style="margin: 15px 0;">Loan Successfully Completed!</h3>
+        <p style="font-size: 16px; margin: 10px 0;">Customer has successfully paid the full loan amount.</p>
+        <p style="margin: 5px 0;"><strong>Completion Date:</strong> <span id="completionDate"></span></p>
+      </div>
+      
+      <!-- Customer Information Grid -->
+      <div class="info-grid-customer">
+        <div class="info-item-customer">
+          <div class="info-label"><i class="fas fa-phone"></i> Phone</div>
+          <div class="info-value" id="custPhone"></div>
+        </div>
+        <div class="info-item-customer">
+          <div class="info-label"><i class="fas fa-home"></i> Address</div>
+          <div class="info-value" id="custAddress"></div>
+        </div>
+        <div class="info-item-customer">
+          <div class="info-label"><i class="fas fa-calendar-alt"></i> Loan Start Date</div>
+          <div class="info-value" id="custStart"></div>
+        </div>
+        <div class="info-item-customer">
+          <div class="info-label"><i class="fas fa-hand-holding-usd"></i> Total Loan Amount</div>
+          <div class="info-value">₹<span id="custDue"></span></div>
+        </div>
+        <div class="info-item-customer">
+          <div class="info-label"><i class="fas fa-coins"></i> Daily Payment</div>
+          <div class="info-value" id="custDailyPayment">₹0</div>
+        </div>
+        <div class="info-item-customer">
+          <div class="info-label"><i class="fas fa-check-circle"></i> Total Paid</div>
+          <div class="info-value" style="color: var(--success);">₹<span id="custPaid">0</span></div>
+        </div>
+        <div class="info-item-customer">
+          <div class="info-label"><i class="fas fa-clock"></i> Remaining Amount</div>
+          <div class="info-value" style="color: var(--danger);">₹<span id="custRemaining">0</span></div>
+        </div>
+        <div class="info-item-customer">
+          <div class="info-label"><i class="fas fa-info-circle"></i> Status</div>
+          <div class="info-value" id="custStatus"></div>
+        </div>
+        <div class="info-item-customer">
+          <div class="info-label"><i class="fas fa-calendar-check"></i> Days Status</div>
+          <div class="info-value" id="custDaysStatus"></div>
+        </div>
+      </div>
+
+      <!-- Progress Section for Active Loans -->
+      <div id="progressSection" class="progress-section" style="margin: 30px 0;">
+        <h3><i class="fas fa-chart-line"></i> Payment Progress</h3>
+        <div class="progress-bar-customer">
+          <div class="progress-track">
+            <div class="progress-fill-customer" id="progressFill"></div>
+          </div>
+          <div class="progress-text">
+            <span id="progressPercent">0%</span>
+            <span id="progressAmount">(₹0 of ₹0)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="margin-top: 25px; display: flex; gap: 15px; flex-wrap: wrap;" id="customerActionButtons">
+        <button class="btn btn-warning" onclick="editCustomer(currentCustomerId)" style="padding: 10px 15px;">
+          <i class="fas fa-edit"></i> Edit Customer Details
+        </button>
+        <button class="btn btn-success" onclick="addPayment()" style="padding: 10px 15px;">
+          <i class="fas fa-plus"></i> Add Payment
+        </button>
+      </div>
+    </div>
+
+    <!-- Payment History Section -->
+    <div class="payment-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3><i class="fas fa-history"></i> Payment History</h3>
+        <button class="btn btn-success" onclick="addPayment()">
+          <i class="fas fa-plus"></i> Add Payment
+        </button>
+      </div>
+      
+      <!-- Payment Table -->
+      <div id="paymentHistoryContainer">
+        <!-- Payment history will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+      <!-- Add Customer Form -->
+      <div id="addCustomerForm" class="hidden form-popup">
+        <h3><i class="fas fa-user-plus"></i> Add New Customer</h3>
+        <label>Name:</label>
+        <input type="text" id="newCustName" placeholder="Customer name" required>
+        
+        <label>Phone:</label>
+        <input type="text" id="newCustPhone" placeholder="Phone number" required>
+        
+        <label>Address:</label>
+        <input type="text" id="newCustAddress" placeholder="Address" required>
+        
+        <label>Start Date:</label>
+        <input type="date" id="newCustStart" required>
+        
+        <label>Total Due Amount (₹):</label>
+        <input type="number" id="newCustDue" placeholder="Amount" required>
+
+        <div class="form-actions">
+          <button id="saveCustomerBtn" class="btn btn-success">
+            <i class="fas fa-check"></i> Save
+          </button>
+          <button id="cancelAddBtn" class="btn btn-danger">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Load script.js first, then owner.js -->
+  <script src="script.js"></script>
+  <script src="owner.js"></script>
+</body>
+</html>

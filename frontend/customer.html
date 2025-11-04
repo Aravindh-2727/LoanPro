@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard - LoanPro</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>LoanPro</span>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <!-- Owner Contact Info -->
+                <div class="owner-contact-info">
+                    <div class="owner-phone">
+                        <i class="fas fa-phone"></i>
+                        <span>8056108207</span>
+                    </div>
+                    <div class="owner-phone">
+                        <i class="fas fa-phone"></i>
+                        <span>9342695097</span>
+                    </div>
+                </div>
+                <a href="#" class="nav-link" id="customerLogoutBtn">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <div id="customerDashboard" class="page container">
+        <div class="card">
+            <div id="customerInfo">
+                <div id="dashboardStatus">Loading your dashboard...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="customer.js"></script>
+
+</body>
+</html>

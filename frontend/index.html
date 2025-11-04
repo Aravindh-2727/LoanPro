@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoanPro - Loan Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>💰</text></svg>">
+</head>
+<body>
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>LoanPro</span>
+            </div>
+            <img src="images-removebg-preview.png" alt="">
+            <nav class="nav-links">
+                <a href="#" class="nav-link" id="homeLink">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="#" class="nav-link" id="customerLoginLink">
+                    <i class="fas fa-user"></i> Customer Login
+                </a>
+                <a href="#" class="nav-link" id="ownerLoginLink">
+                    <i class="fas fa-user-shield"></i> Owner Login
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div id="homePage" class="page container">
+        <div class="card">
+            <h1>Welcome to LoanPro</h1>
+            <p>Your trusted partner for managing loans efficiently and transparently.</p>
+            
+            
+            <h2>How It Works</h2>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3><i class="fas fa-user-check"></i> For Customers</h3>
+                    <p>Login with your phone number to view your loan details, payment history, and remaining balance.</p>
+                    <ul style="text-align: left; margin-top: 15px;">
+                        <li>View your loan status</li>
+                        <li>Track payment history</li>
+                        <li>Check remaining balance</li>
+                        <li>Monitor payment deadlines</li>
+                    </ul>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-user-shield"></i> For Owners</h3>
+                    <p>Access the owner dashboard to manage all customer accounts and track loan performance.</p>
+                    <ul style="text-align: left; margin-top: 15px;">
+                        <li>Manage customer accounts</li>
+                        <li>Track loan performance</li>
+                        <li>Update payment records</li>
+                        <li>Generate financial reports</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="customerLoginPage" class="page container hidden">
+        <div class="card login-form">
+            <h2><i class="fas fa-user"></i> Customer Login</h2>
+            <p>Enter your phone number to access your account</p>
+            
+            <div class="form-group">
+                <label class="form-label" for="customerPhone">
+                    <i class="fas fa-mobile-alt"></i> Phone Number
+                </label>
+                <input type="text" id="customerPhone" placeholder="Enter your phone number">
+            </div>
+            
+            <button class="btn btn-primary" id="customerLoginBtn">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            <button class="btn" id="backFromCustomerLogin">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </button>
+        </div>
+    </div>
+
+    <div id="ownerLoginPage" class="page container hidden">
+        <div class="card login-form">
+            <h2><i class="fas fa-user-shield"></i> Owner Login</h2>
+            <p>Enter your credentials to access the owner dashboard</p>
+            
+            <div class="form-group">
+                <label class="form-label" for="ownerEmail">
+                    <i class="fas fa-envelope"></i> Email
+                </label>
+                <input type="email" id="ownerEmail" placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="ownerPassword">
+                    <i class="fas fa-lock"></i> Password
+                </label>
+                <input type="password" id="ownerPassword" placeholder="Enter your password">
+            </div>
+            
+            <button class="btn btn-primary" id="ownerLoginBtn">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            <button class="btn" id="backFromOwnerLogin">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </button>
+        </div>
+    </div>
+
+    <!-- Debug Console (remove in production) -->
+<div style="position: fixed; bottom: 10px; right: 10px; background: #333; color: white; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 1000;">
+    <div>Console: <span id="debugStatus">Ready</span></div>
+</div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2023 LoanPro - Loan Management System. All rights reserved.</p>
+            <p>Secure. Reliable. Transparent.</p>
+        </div>
+
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
