@@ -1,4 +1,4 @@
-// script.js - UPDATED FOR DEPLOYMENT
+// script.js - UPDATED FOR DEPLOYMENT WITH GLOBAL VARIABLES
 console.log("🔧 Script.js loaded");
 
 // Define API_BASE for deployment - UPDATED TO PREVENT CONFLICT
@@ -8,59 +8,60 @@ const MAIN_API_BASE = window.location.hostname === 'localhost' || window.locatio
 
 console.log("🌐 API Base URL:", MAIN_API_BASE);
 
-// 🧭 Navigation Elements
-const loginSection = document.getElementById("loginSection");
-const roleSelection = document.getElementById("roleSelection");
-const ownerLoginSection = document.getElementById("ownerLoginSection");
-const customerLoginSection = document.getElementById("customerLoginSection");
-const ownerDashboard = document.getElementById("ownerDashboard");
-const customerDashboard = document.getElementById("customerDashboard");
+// 🧭 Navigation Elements - MADE GLOBAL TO PREVENT CONFLICTS
+window.loginSection = document.getElementById("loginSection");
+window.roleSelection = document.getElementById("roleSelection");
+window.ownerLoginSection = document.getElementById("ownerLoginSection");
+window.customerLoginSection = document.getElementById("customerLoginSection");
+window.ownerDashboard = document.getElementById("ownerDashboard");
+window.customerDashboard = document.getElementById("customerDashboard");
 
-// 🔐 Owner Login Elements
-const ownerLoginBtn = document.getElementById("ownerLoginBtn");
-const ownerUsernameInput = document.getElementById("ownerUsername");
-const ownerPasswordInput = document.getElementById("ownerPassword");
-const ownerLogoutBtn = document.getElementById("ownerLogoutBtn");
+// 🔐 Owner Login Elements - MADE GLOBAL
+window.ownerLoginBtn = document.getElementById("ownerLoginBtn");
+window.ownerUsernameInput = document.getElementById("ownerUsername");
+window.ownerPasswordInput = document.getElementById("ownerPassword");
+window.ownerLogoutBtn = document.getElementById("ownerLogoutBtn");
 
-// 👤 Customer Login Elements
-const customerLoginBtn = document.getElementById("customerLoginBtn");
-const customerPhoneInput = document.getElementById("customerPhone");
+// 👤 Customer Login Elements - MADE GLOBAL
+window.customerLoginBtn = document.getElementById("customerLoginBtn");
+window.customerPhoneInput = document.getElementById("customerPhone");
+window.customerLogoutBtn = document.getElementById("customerLogoutBtn");
 
-// Role Selection Buttons
-const ownerRoleBtn = document.getElementById("ownerRoleBtn");
-const customerRoleBtn = document.getElementById("customerRoleBtn");
-const backToRoleBtn = document.getElementById("backToRoleBtn");
+// Role Selection Buttons - MADE GLOBAL
+window.ownerRoleBtn = document.getElementById("ownerRoleBtn");
+window.customerRoleBtn = document.getElementById("customerRoleBtn");
+window.backToRoleBtn = document.getElementById("backToRoleBtn");
 
 // ✅ Role Selection
-if (ownerRoleBtn) {
-    ownerRoleBtn.addEventListener("click", () => {
-        loginSection.classList.add("hidden");
-        roleSelection.classList.add("hidden");
-        ownerLoginSection.classList.remove("hidden");
+if (window.ownerRoleBtn) {
+    window.ownerRoleBtn.addEventListener("click", () => {
+        window.loginSection.classList.add("hidden");
+        window.roleSelection.classList.add("hidden");
+        window.ownerLoginSection.classList.remove("hidden");
     });
 }
 
-if (customerRoleBtn) {
-    customerRoleBtn.addEventListener("click", () => {
-        loginSection.classList.add("hidden");
-        roleSelection.classList.add("hidden");
-        customerLoginSection.classList.remove("hidden");
+if (window.customerRoleBtn) {
+    window.customerRoleBtn.addEventListener("click", () => {
+        window.loginSection.classList.add("hidden");
+        window.roleSelection.classList.add("hidden");
+        window.customerLoginSection.classList.remove("hidden");
     });
 }
 
-if (backToRoleBtn) {
-    backToRoleBtn.addEventListener("click", () => {
-        ownerLoginSection.classList.add("hidden");
-        customerLoginSection.classList.add("hidden");
-        roleSelection.classList.remove("hidden");
+if (window.backToRoleBtn) {
+    window.backToRoleBtn.addEventListener("click", () => {
+        window.ownerLoginSection.classList.add("hidden");
+        window.customerLoginSection.classList.add("hidden");
+        window.roleSelection.classList.remove("hidden");
     });
 }
 
 // ✅ Owner Login Functionality
-if (ownerLoginBtn) {
-    ownerLoginBtn.addEventListener("click", async () => {
-        const username = ownerUsernameInput.value.trim();
-        const password = ownerPasswordInput.value.trim();
+if (window.ownerLoginBtn) {
+    window.ownerLoginBtn.addEventListener("click", async () => {
+        const username = window.ownerUsernameInput.value.trim();
+        const password = window.ownerPasswordInput.value.trim();
 
         if (!username || !password) {
             alert("Please enter both username and password");
@@ -83,8 +84,8 @@ if (ownerLoginBtn) {
                 console.log("✅ Owner login successful:", data);
                 
                 // Hide login, show owner dashboard
-                ownerLoginSection.classList.add("hidden");
-                ownerDashboard.classList.remove("hidden");
+                window.ownerLoginSection.classList.add("hidden");
+                window.ownerDashboard.classList.remove("hidden");
                 
                 // Load owner dashboard
                 if (typeof loadOwnerDashboard === 'function') {
@@ -105,9 +106,9 @@ if (ownerLoginBtn) {
 }
 
 // ✅ Customer Login Functionality
-if (customerLoginBtn) {
-    customerLoginBtn.addEventListener("click", async () => {
-        const phone = customerPhoneInput.value.trim();
+if (window.customerLoginBtn) {
+    window.customerLoginBtn.addEventListener("click", async () => {
+        const phone = window.customerPhoneInput.value.trim();
         
         if (!phone || phone.length < 10) {
             alert("Please enter a valid phone number (at least 10 digits)");
@@ -130,8 +131,8 @@ if (customerLoginBtn) {
             console.log("✅ Customer login successful:", customer);
             
             // Hide login, show customer dashboard
-            customerLoginSection.classList.add("hidden");
-            customerDashboard.classList.remove("hidden");
+            window.customerLoginSection.classList.add("hidden");
+            window.customerDashboard.classList.remove("hidden");
             
             // Load customer data if function exists
             if (typeof loadCustomerData === 'function') {
@@ -150,15 +151,15 @@ if (customerLoginBtn) {
 }
 
 // ✅ Logout Functionality
-if (ownerLogoutBtn) {
-    ownerLogoutBtn.addEventListener("click", () => {
-        ownerDashboard.classList.add("hidden");
-        loginSection.classList.remove("hidden");
-        roleSelection.classList.remove("hidden");
+if (window.ownerLogoutBtn) {
+    window.ownerLogoutBtn.addEventListener("click", () => {
+        window.ownerDashboard.classList.add("hidden");
+        window.loginSection.classList.remove("hidden");
+        window.roleSelection.classList.remove("hidden");
         
         // Clear inputs
-        ownerUsernameInput.value = "";
-        ownerPasswordInput.value = "";
+        window.ownerUsernameInput.value = "";
+        window.ownerPasswordInput.value = "";
     });
 }
 
@@ -195,20 +196,20 @@ function hideLoading(containerId) {
 }
 
 // ✅ Enter Key Support
-if (ownerUsernameInput && ownerPasswordInput) {
-    [ownerUsernameInput, ownerPasswordInput].forEach(input => {
+if (window.ownerUsernameInput && window.ownerPasswordInput) {
+    [window.ownerUsernameInput, window.ownerPasswordInput].forEach(input => {
         input.addEventListener("keypress", (e) => {
             if (e.key === "Enter") {
-                ownerLoginBtn.click();
+                window.ownerLoginBtn.click();
             }
         });
     });
 }
 
-if (customerPhoneInput) {
-    customerPhoneInput.addEventListener("keypress", (e) => {
+if (window.customerPhoneInput) {
+    window.customerPhoneInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
-            customerLoginBtn.click();
+            window.customerLoginBtn.click();
         }
     });
 }
@@ -257,15 +258,15 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
     
     // Show login section by default
-    if (loginSection) {
-        loginSection.classList.remove("hidden");
+    if (window.loginSection) {
+        window.loginSection.classList.remove("hidden");
     }
-    if (roleSelection) {
-        roleSelection.classList.remove("hidden");
+    if (window.roleSelection) {
+        window.roleSelection.classList.remove("hidden");
     }
     
     // Hide all other sections
-    [ownerLoginSection, customerLoginSection, ownerDashboard, customerDashboard].forEach(section => {
+    [window.ownerLoginSection, window.customerLoginSection, window.ownerDashboard, window.customerDashboard].forEach(section => {
         if (section) section.classList.add("hidden");
     });
 });
@@ -277,3 +278,8 @@ window.addEventListener('error', (event) => {
 
 // Make MAIN_API_BASE available globally for other scripts if needed
 window.MAIN_API_BASE = MAIN_API_BASE;
+
+// Make utility functions global so they can be used by other scripts
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
+window.showError = showError;
