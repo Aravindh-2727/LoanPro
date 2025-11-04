@@ -5,7 +5,7 @@ console.log("📊 Owner Dashboard Loaded");
 // owner.js - UPDATE FIRST LINE ONLY
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? "http://localhost:5000" 
-    : "https://loanpro-backend-59kp.onrender.com";
+    : "https://loanpro-backend-t41k.onrender.com";
 
 // REST OF YOUR EXISTING owner.js CODE REMAINS EXACTLY THE SAME
 let allCustomers = [];
