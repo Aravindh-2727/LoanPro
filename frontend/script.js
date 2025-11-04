@@ -1,7 +1,7 @@
 // script.js - UPDATED FOR DEPLOYMENT
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? "http://localhost:5000" 
-    : "hhttps://loanpro-backend-59kp.onrender.com";
+    : "https://loanpro-backend-t41k.onrender.com";
 
 console.log("🌐 Using API Base:", API_BASE);
 
