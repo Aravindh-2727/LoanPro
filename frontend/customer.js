@@ -1,4 +1,4 @@
-// customer.js - UPDATED FOR DEPLOYMENT
+// customer.js - UPDATED TO REMOVE DUPLICATE VARIABLES
 console.log("👤 Customer Dashboard Loaded");
 
 // Define API_BASE for deployment - UPDATED TO PREVENT CONFLICT
@@ -10,12 +10,15 @@ const CUSTOMER_API_BASE = window.location.hostname === 'localhost' || window.loc
 let currentCustomer = null;
 let customerPayments = [];
 
-// 🧭 DOM Elements
-const customerDashboard = document.getElementById("customerDashboard");
-const customerLoginSection = document.getElementById("customerLogin");
-const customerPhoneInput = document.getElementById("customerPhone");
-const customerLoginBtn = document.getElementById("customerLoginBtn");
-const customerLogoutBtn = document.getElementById("customerLogoutBtn");
+// 🧭 DOM Elements - REMOVED DUPLICATES THAT ARE IN script.js
+// These are already declared in script.js, so we'll reference them directly
+// const customerDashboard = document.getElementById("customerDashboard");
+// const customerLoginSection = document.getElementById("customerLogin");
+// const customerPhoneInput = document.getElementById("customerPhone");
+// const customerLoginBtn = document.getElementById("customerLoginBtn");
+// const customerLogoutBtn = document.getElementById("customerLogoutBtn");
+
+// Customer-specific DOM elements (not in script.js)
 const customerNameDisplay = document.getElementById("customerName");
 const customerPhoneDisplay = document.getElementById("customerPhoneDisplay");
 const customerAddressDisplay = document.getElementById("customerAddressDisplay");
@@ -30,10 +33,10 @@ const paymentHistoryBody = document.getElementById("paymentHistoryBody");
 const daysStatusDisplay = document.getElementById("daysStatusDisplay");
 const customerStatusDisplay = document.getElementById("customerStatusDisplay");
 
-// ✅ Customer Login
-if (customerLoginBtn) {
-    customerLoginBtn.addEventListener("click", async () => {
-        const phone = customerPhoneInput.value.trim();
+// ✅ Customer Login - UPDATED TO USE GLOBAL VARIABLES FROM script.js
+if (window.customerLoginBtn) {
+    window.customerLoginBtn.addEventListener("click", async () => {
+        const phone = window.customerPhoneInput.value.trim();
         
         if (!phone || phone.length < 10) {
             alert("Please enter a valid phone number (at least 10 digits)");
@@ -55,9 +58,9 @@ if (customerLoginBtn) {
             const customer = await res.json();
             currentCustomer = customer;
             
-            // Hide login, show dashboard
-            customerLoginSection.classList.add("hidden");
-            customerDashboard.classList.remove("hidden");
+            // Hide login, show dashboard - USING GLOBAL VARIABLES
+            window.customerLoginSection.classList.add("hidden");
+            window.customerDashboard.classList.remove("hidden");
             
             // Load customer data
             loadCustomerData();
@@ -246,26 +249,26 @@ function hideCustomerLoading() {
     }
 }
 
-// ✅ Customer Logout
-if (customerLogoutBtn) {
-    customerLogoutBtn.addEventListener("click", () => {
+// ✅ Customer Logout - UPDATED TO USE GLOBAL VARIABLES
+if (window.customerLogoutBtn) {
+    window.customerLogoutBtn.addEventListener("click", () => {
         currentCustomer = null;
         customerPayments = [];
         
         // Clear phone input
-        customerPhoneInput.value = "";
+        window.customerPhoneInput.value = "";
         
-        // Show login, hide dashboard
-        customerDashboard.classList.add("hidden");
-        customerLoginSection.classList.remove("hidden");
+        // Show login, hide dashboard - USING GLOBAL VARIABLES
+        window.customerDashboard.classList.add("hidden");
+        window.customerLoginSection.classList.remove("hidden");
     });
 }
 
-// ✅ Enter key support for login
-if (customerPhoneInput) {
-    customerPhoneInput.addEventListener("keypress", (e) => {
+// ✅ Enter key support for login - UPDATED TO USE GLOBAL VARIABLES
+if (window.customerPhoneInput) {
+    window.customerPhoneInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
-            customerLoginBtn.click();
+            window.customerLoginBtn.click();
         }
     });
 }
