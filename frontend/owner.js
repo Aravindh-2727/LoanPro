@@ -1,16 +1,16 @@
-// owner.js - FIXED VERSION
-console.log("Owner Dashboard Loaded");
+// owner.js - COMPLETELY FIXED VERSION
+console.log("📊 Owner Dashboard Loaded");
 
 // Use the global API_BASE variable with fallback
 const API_BASE = window.API_BASE || "https://loanpro-backend-t41k.onrender.com";
 window.API_BASE = API_BASE;
 
-console.log("Using API Base:", window.API_BASE);
+console.log("🌐 Using API Base:", window.API_BASE);
 
 let allCustomers = [];
 let currentCustomerId = null;
 
-// Utility Functions
+// ==================== UTILITY FUNCTIONS ====================
 function calculateCustomerStatus(customer) {
   const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
   
@@ -74,7 +74,7 @@ function showError(containerId, message) {
   }
 }
 
-// Analytics Functions
+// ==================== ANALYTICS FUNCTIONS ====================
 function updateAnalytics(customers) {
   const totalCustomersElem = document.getElementById("analyticsTotalCustomers");
   const activeLoansElem = document.getElementById("analyticsActiveLoans");
@@ -104,7 +104,7 @@ function updateAnalytics(customers) {
   if (activeLoansReceivedElem) activeLoansReceivedElem.textContent = "₹" + activeLoansReceived.toLocaleString();
 }
 
-// Customer List Rendering Functions
+// ==================== CUSTOMER LIST RENDERING ====================
 function renderCustomerList(customers) {
   const customersContainer = document.getElementById("customersContainer");
   if (!customersContainer) return;
@@ -220,10 +220,10 @@ function renderCustomerRowFullWidth(customer) {
   `;
 }
 
-// Customer Details Functions
+// ==================== CUSTOMER DETAILS FUNCTIONS ====================
 async function viewCustomerDetails(customerId) {
   try {
-    console.log("Loading customer details:", customerId);
+    console.log("🔍 Loading customer details:", customerId);
     currentCustomerId = customerId;
     
     const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`);
@@ -302,7 +302,7 @@ async function viewCustomerDetails(customerId) {
     document.getElementById("customerList").classList.add("hidden");
     
   } catch (err) {
-    console.error("Error loading customer details:", err);
+    console.error("❌ Error loading customer details:", err);
     alert("Failed to load customer details.");
   }
 }
@@ -348,109 +348,46 @@ function renderPaymentHistoryNew(payments, totalPaid) {
   `;
 }
 
-// Main Dashboard Function
+// ==================== MAIN DASHBOARD FUNCTION ====================
 async function loadOwnerDashboard() {
   try {
+    console.log("🔄 Starting owner dashboard load...");
+    console.log("🌐 API Base URL:", window.API_BASE);
+    
     showLoading("customersContainer", "Loading customers...");
     
-    console.log("Loading customers from:", `${window.API_BASE}/api/customers`);
+    console.log("📡 Loading customers from:", `${window.API_BASE}/api/customers`);
     
     const response = await fetch(`${window.API_BASE}/api/customers`);
+    
+    console.log("📊 Response status:", response.status);
+    console.log("📊 Response ok:", response.ok);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch customers: HTTP ${response.status}`);
     }
     
     const customers = await response.json();
-    console.log("Successfully loaded customers:", customers.length);
+    console.log("✅ Successfully loaded customers:", customers.length);
     
-    allCustomers = customers.map(calculateCustomerStatus);
+    // Process customers with status calculation
+    allCustomers = customers.map(customer => calculateCustomerStatus(customer));
+    
+    console.log("📈 Updating analytics...");
     updateAnalytics(allCustomers);
+    
+    console.log("🎨 Rendering customer list...");
     renderCustomerList(allCustomers);
     
+    console.log("🏁 Owner dashboard loaded successfully!");
+    
   } catch (err) {
-    console.error("Error loading owner dashboard:", err);
+    console.error("❌ Error loading owner dashboard:", err);
     showError("customersContainer", `Failed to load customers: ${err.message}`);
   }
 }
 
-// Initialize when DOM is loaded
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("Owner Dashboard Initialized");
-  
-  // Setup event listeners
-  document.getElementById("backToListBtn")?.addEventListener("click", () => {
-    document.getElementById("customerDetailView").classList.add("hidden");
-    document.getElementById("customerList").classList.remove("hidden");
-  });
-  
-  document.getElementById("addCustomerBtn")?.addEventListener("click", () => {
-    document.getElementById("addCustomerForm").classList.remove("hidden");
-    document.getElementById("customerList").classList.add("hidden");
-    // Set today's date as default
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById("newCustStart").value = today;
-  });
-  
-  document.getElementById("saveCustomerBtn")?.addEventListener("click", async () => {
-    const name = document.getElementById("newCustName").value.trim();
-    const phone = document.getElementById("newCustPhone").value.trim();
-    const address = document.getElementById("newCustAddress").value.trim();
-    const startDate = document.getElementById("newCustStart").value;
-    const totalLoanAmount = parseFloat(document.getElementById("newCustDue").value) || 0;
-
-    if (!name || !phone || phone.length < 10) {
-      alert("Valid name and 10-digit phone are required!");
-      return;
-    }
-
-    const dailyPayment = Math.round(totalLoanAmount / 100);
-    const newCustomer = { 
-      name, 
-      phone, 
-      address, 
-      loanStartDate: startDate, 
-      totalLoanAmount, 
-      dailyPayment, 
-      payments: [], 
-      status: "active" 
-    };
-
-    try {
-      const res = await fetch(`${window.API_BASE}/api/owner/add-customer`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newCustomer),
-      });
-
-      if (res.ok) {
-        alert("Customer added successfully!");
-        document.getElementById("addCustomerForm").classList.add("hidden");
-        document.getElementById("customerList").classList.remove("hidden");
-        loadOwnerDashboard();
-      } else {
-        const data = await res.json();
-        alert("Failed: " + (data.message || "Unknown error"));
-      }
-    } catch (err) {
-      alert("Error adding customer.");
-    }
-  });
-  
-  document.getElementById("cancelAddBtn")?.addEventListener("click", () => {
-    document.getElementById("addCustomerForm").classList.add("hidden");
-    document.getElementById("customerList").classList.remove("hidden");
-  });
-  
-  document.getElementById("ownerLogoutBtn")?.addEventListener("click", () => {
-    window.location.href = "index.html";
-  });
-
-  // Load dashboard
-  loadOwnerDashboard();
-});
-
-// Add these placeholder functions for now
+// ==================== PLACEHOLDER FUNCTIONS ====================
 function editCustomer(customerId) {
   alert("Edit feature coming soon for customer: " + customerId);
 }
@@ -471,3 +408,97 @@ function clearAllFilters() {
   alert("Clear filters feature coming soon");
   loadOwnerDashboard();
 }
+
+// ==================== INITIALIZATION ====================
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("🏁 Owner Dashboard Initialized");
+  console.log("🌐 Final API Base:", window.API_BASE);
+
+  // Setup event listeners
+  const backToListBtn = document.getElementById("backToListBtn");
+  const addCustomerBtn = document.getElementById("addCustomerBtn");
+  const saveCustomerBtn = document.getElementById("saveCustomerBtn");
+  const cancelAddBtn = document.getElementById("cancelAddBtn");
+  const ownerLogoutBtn = document.getElementById("ownerLogoutBtn");
+
+  if (backToListBtn) {
+    backToListBtn.addEventListener("click", () => {
+      document.getElementById("customerDetailView").classList.add("hidden");
+      document.getElementById("customerList").classList.remove("hidden");
+      currentCustomerId = null;
+    });
+  }
+
+  if (addCustomerBtn) {
+    addCustomerBtn.addEventListener("click", () => {
+      document.getElementById("addCustomerForm").classList.remove("hidden");
+      document.getElementById("customerList").classList.add("hidden");
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById("newCustStart").value = today;
+    });
+  }
+
+  if (saveCustomerBtn) {
+    saveCustomerBtn.addEventListener("click", async () => {
+      const name = document.getElementById("newCustName").value.trim();
+      const phone = document.getElementById("newCustPhone").value.trim();
+      const address = document.getElementById("newCustAddress").value.trim();
+      const startDate = document.getElementById("newCustStart").value;
+      const totalLoanAmount = parseFloat(document.getElementById("newCustDue").value) || 0;
+
+      if (!name || !phone || phone.length < 10) {
+        alert("Valid name and 10-digit phone are required!");
+        return;
+      }
+
+      const dailyPayment = Math.round(totalLoanAmount / 100);
+      const newCustomer = { 
+        name, 
+        phone, 
+        address, 
+        loanStartDate: startDate, 
+        totalLoanAmount, 
+        dailyPayment, 
+        payments: [], 
+        status: "active" 
+      };
+
+      try {
+        const res = await fetch(`${window.API_BASE}/api/owner/add-customer`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newCustomer),
+        });
+
+        if (res.ok) {
+          alert("Customer added successfully!");
+          document.getElementById("addCustomerForm").classList.add("hidden");
+          document.getElementById("customerList").classList.remove("hidden");
+          loadOwnerDashboard();
+        } else {
+          const data = await res.json();
+          alert("Failed: " + (data.message || "Unknown error"));
+        }
+      } catch (err) {
+        alert("Error adding customer.");
+      }
+    });
+  }
+
+  if (cancelAddBtn) {
+    cancelAddBtn.addEventListener("click", () => {
+      document.getElementById("addCustomerForm").classList.add("hidden");
+      document.getElementById("customerList").classList.remove("hidden");
+    });
+  }
+
+  if (ownerLogoutBtn) {
+    ownerLogoutBtn.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+  }
+
+  // Load dashboard
+  console.log("🚀 Starting dashboard load...");
+  loadOwnerDashboard();
+});
