@@ -4,127 +4,118 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LoanPro - Loan Management System</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>💰</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <header class="header">
-        <div class="container header-content">
-            <div class="logo">
-                <i class="fas fa-hand-holding-usd"></i>
-                <span>LoanPro</span>
-            </div>
-            <img src="images-removebg-preview.png" alt="">
-            <nav class="nav-links">
-                <a href="#" class="nav-link" id="homeLink">
-                    <i class="fas fa-home"></i> Home
-                </a>
-                <a href="#" class="nav-link" id="customerLoginLink">
-                    <i class="fas fa-user"></i> Customer Login
-                </a>
-                <a href="#" class="nav-link" id="ownerLoginLink">
-                    <i class="fas fa-user-shield"></i> Owner Login
-                </a>
-            </nav>
-        </div>
-    </header>
-
-    <div id="homePage" class="page container">
-        <div class="card">
-            <h1>Welcome to LoanPro</h1>
-            <p>Your trusted partner for managing loans efficiently and transparently.</p>
+    <!-- Login Section -->
+    <div id="loginSection" class="section">
+        <div class="login-container">
+            <h1><i class="fas fa-hand-holding-usd"></i> LoanPro</h1>
+            <p class="subtitle">Loan Management System</p>
             
-            
-            <h2>How It Works</h2>
-            <div class="stats-container">
-                <div class="stat-card">
-                    <h3><i class="fas fa-user-check"></i> For Customers</h3>
-                    <p>Login with your phone number to view your loan details, payment history, and remaining balance.</p>
-                    <ul style="text-align: left; margin-top: 15px;">
-                        <li>View your loan status</li>
-                        <li>Track payment history</li>
-                        <li>Check remaining balance</li>
-                        <li>Monitor payment deadlines</li>
-                    </ul>
-                </div>
-                <div class="stat-card">
-                    <h3><i class="fas fa-user-shield"></i> For Owners</h3>
-                    <p>Access the owner dashboard to manage all customer accounts and track loan performance.</p>
-                    <ul style="text-align: left; margin-top: 15px;">
-                        <li>Manage customer accounts</li>
-                        <li>Track loan performance</li>
-                        <li>Update payment records</li>
-                        <li>Generate financial reports</li>
-                    </ul>
+            <div class="login-card">
+                <h2>Welcome Back</h2>
+                <p>Please choose your role to continue</p>
+                
+                <div class="button-group">
+                    <button id="ownerRoleBtn" class="btn btn-primary btn-large">
+                        <i class="fas fa-user-tie"></i> Owner Login
+                    </button>
+                    <button id="customerRoleBtn" class="btn btn-secondary btn-large">
+                        <i class="fas fa-users"></i> Customer Login
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="customerLoginPage" class="page container hidden">
-        <div class="card login-form">
-            <h2><i class="fas fa-user"></i> Customer Login</h2>
-            <p>Enter your phone number to access your account</p>
-            
-            <div class="form-group">
-                <label class="form-label" for="customerPhone">
-                    <i class="fas fa-mobile-alt"></i> Phone Number
-                </label>
-                <input type="text" id="customerPhone" placeholder="Enter your phone number">
-            </div>
-            
-            <button class="btn btn-primary" id="customerLoginBtn">
-                <i class="fas fa-sign-in-alt"></i> Login
-            </button>
-            <button class="btn" id="backFromCustomerLogin">
-                <i class="fas fa-arrow-left"></i> Back to Home
-            </button>
-        </div>
-    </div>
-
-    <div id="ownerLoginPage" class="page container hidden">
-        <div class="card login-form">
-            <h2><i class="fas fa-user-shield"></i> Owner Login</h2>
-            <p>Enter your credentials to access the owner dashboard</p>
-            
-            <div class="form-group">
-                <label class="form-label" for="ownerEmail">
-                    <i class="fas fa-envelope"></i> Email
-                </label>
-                <input type="email" id="ownerEmail" placeholder="Enter your email">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label" for="ownerPassword">
-                    <i class="fas fa-lock"></i> Password
-                </label>
-                <input type="password" id="ownerPassword" placeholder="Enter your password">
-            </div>
-            
-            <button class="btn btn-primary" id="ownerLoginBtn">
-                <i class="fas fa-sign-in-alt"></i> Login
-            </button>
-            <button class="btn" id="backFromOwnerLogin">
-                <i class="fas fa-arrow-left"></i> Back to Home
-            </button>
-        </div>
-    </div>
-
-    <!-- Debug Console (remove in production) -->
-<div style="position: fixed; bottom: 10px; right: 10px; background: #333; color: white; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 1000;">
-    <div>Console: <span id="debugStatus">Ready</span></div>
-</div>
-
-    <footer class="footer">
+    <!-- Role Selection Section -->
+    <div id="roleSelection" class="section hidden">
         <div class="container">
-            <p>&copy; 2023 LoanPro - Loan Management System. All rights reserved.</p>
-            <p>Secure. Reliable. Transparent.</p>
+            <h1>Select Your Role</h1>
+            <div class="role-buttons">
+                <button id="backToRoleBtn" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </button>
+            </div>
         </div>
+    </div>
 
-    </footer>
+    <!-- Owner Login Section -->
+    <div id="ownerLoginSection" class="section hidden">
+        <div class="login-container">
+            <h1><i class="fas fa-user-tie"></i> Owner Login</h1>
+            
+            <div class="login-card">
+                <button id="backToRoleBtn" class="btn btn-outline back-btn">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                
+                <h2>Owner Access</h2>
+                <div class="form-group">
+                    <label for="ownerUsername">Username:</label>
+                    <input type="text" id="ownerUsername" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="ownerPassword">Password:</label>
+                    <input type="password" id="ownerPassword" placeholder="Enter password">
+                </div>
+                <button id="ownerLoginBtn" class="btn btn-primary btn-large">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Login Section -->
+    <div id="customerLoginSection" class="section hidden">
+        <div class="login-container">
+            <h1><i class="fas fa-users"></i> Customer Login</h1>
+            
+            <div class="login-card">
+                <button id="backToRoleBtn" class="btn btn-outline back-btn">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                
+                <h2>Customer Access</h2>
+                <div class="form-group">
+                    <label for="customerPhone">Phone Number:</label>
+                    <input type="text" id="customerPhone" placeholder="Enter your phone number">
+                </div>
+                <button id="customerLoginBtn" class="btn btn-primary btn-large">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Owner Dashboard -->
+    <div id="ownerDashboard" class="section hidden">
+        <!-- Owner dashboard content -->
+        <header class="dashboard-header">
+            <h1><i class="fas fa-user-tie"></i> Owner Dashboard</h1>
+            <button id="ownerLogoutBtn" class="btn btn-danger">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </header>
+        <!-- Rest of owner dashboard -->
+    </div>
+
+    <!-- Customer Dashboard -->
+    <div id="customerDashboard" class="section hidden">
+        <!-- Customer dashboard content -->
+        <header class="dashboard-header">
+            <h1><i class="fas fa-user"></i> My Loan Dashboard</h1>
+            <button id="customerLogoutBtn" class="btn btn-danger">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </header>
+        <!-- Rest of customer dashboard -->
+    </div>
 
     <script src="script.js"></script>
+    <script src="owner.js"></script>
+    <script src="customer.js"></script>
 </body>
 </html>
