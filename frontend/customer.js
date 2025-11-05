@@ -14,19 +14,6 @@ if (!loggedInCustomer) {
   loadCustomerDashboard(loggedInCustomer);
 }
 
-async function loadCustomerDashboard(customer) {
-  document.getElementById("dashboardStatus").textContent = "Loading your dashboard...";
-
-  try {
-    const res = await fetch(`${window.API_BASE}/api/customers/${customer._id}`);
-    
-    if (!res.ok) {
-      throw new Error(`Failed to fetch customer data: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    
-    // ... REST OF YOUR customer.js CODE REMAINS THE SAME, JUST REPLACE ALL API_BASE WITH window.API_BASE ...
 // ✅ Calculate Customer Status (same as owner dashboard)
 function calculateCustomerStatus(customer) {
   const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
@@ -70,7 +57,7 @@ async function loadCustomerDashboard(customer) {
   document.getElementById("dashboardStatus").textContent = "Loading your dashboard...";
 
   try {
-    const res = await fetch(`${API_BASE}/api/customers/${customer._id}`);
+    const res = await fetch(`${window.API_BASE}/api/customers/${customer._id}`);
     
     if (!res.ok) {
       throw new Error(`Failed to fetch customer data: ${res.status}`);
