@@ -7,34 +7,20 @@ require('dotenv').config();
 
 const app = express();
 
-// ✅ ENHANCED CORS Configuration - ALLOW SPECIFIC ORIGINS
-const allowedOrigins = [
-  'https://loan-pro-ten.vercel.app',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'http://localhost:5000'
-];
-
+// ✅ SIMPLE CORS CONFIGURATION - ALLOW ALL ORIGINS
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"]
+    origin: "*", // Allow all origins during development
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With", "Origin"]
 }));
 
-// ✅ Handle preflight requests
+// ✅ Handle preflight requests for ALL routes
 app.options('*', cors());
 
-app.use(bodyParser.json());
+// ✅ Body parser middleware
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json());
 
 // ✅ MongoDB Connection
@@ -54,7 +40,7 @@ mongoose.connect(MONGODB_URI, {
     console.log('❌ MongoDB connection error:', err.message);
 });
 
-// ✅ Schemas (keep your existing schemas)
+// ✅ Schemas
 const customerSchema = new mongoose.Schema({
     name: { type: String, required: true },
     phone: { type: String, required: true, unique: true },
@@ -81,7 +67,7 @@ const ownerSchema = new mongoose.Schema({
 const Customer = mongoose.model('Customer', customerSchema);
 const Owner = mongoose.model('Owner', ownerSchema);
 
-// ✅ Initialize Owner Account (keep your existing function)
+// ✅ Initialize Owner Account
 async function initializeOwner() {
     try {
         const existingOwner = await Owner.findOne({ email: 'owner@loanpro.com' });
@@ -102,18 +88,41 @@ async function initializeOwner() {
     }
 }
 
-// ✅ Health Check - FIXED ENDPOINT
+// ✅ Manual CORS headers for all responses
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, Origin');
+    
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    next();
+});
+
+// ✅ Health Check
 app.get("/", (req, res) => {
     res.json({ 
         status: "Server is running!", 
         database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
         timestamp: new Date().toISOString(),
-        message: "LoanPro Backend API"
+        cors: "Enabled for all origins"
     });
 });
 
-// ✅ FIXED Analytics Endpoint - Add this before other routes
-app.get("/api/analytics", async (req, res) => {
+app.get("/api/health", (req, res) => {
+    const dbStatus = mongoose.connection.readyState === 1 ? "Connected" : "Disconnected";
+    res.json({ 
+        status: "OK", 
+        database: dbStatus,
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        cors: "Enabled"
+    });
+});
+
+// ✅ Analytics Endpoint
+app.get('/api/analytics', async (req, res) => {
     try {
         const customers = await Customer.find();
         const totalCustomers = customers.length;
@@ -139,18 +148,7 @@ app.get("/api/analytics", async (req, res) => {
     }
 });
 
-// ✅ Health Check Endpoint
-app.get("/api/health", (req, res) => {
-    const dbStatus = mongoose.connection.readyState === 1 ? "Connected" : "Disconnected";
-    res.json({ 
-        status: "OK", 
-        database: dbStatus,
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
-    });
-});
-
-// ✅ Update Loan Status Function (keep your existing function)
+// ✅ Update Loan Status Function
 async function updateLoanStatus(customer) {
     try {
         const totalPaid = customer.payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
@@ -168,7 +166,7 @@ async function updateLoanStatus(customer) {
     }
 }
 
-// ✅ Owner Login - ADD CORS HEADERS
+// ✅ Owner Login
 app.post('/api/owner/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -193,7 +191,7 @@ app.post('/api/owner/login', async (req, res) => {
     }
 });
 
-// ✅ Customer Login - ADD CORS HEADERS
+// ✅ Customer Login
 app.post('/api/customer/login', async (req, res) => {
     try {
         const { phone } = req.body;
@@ -214,7 +212,7 @@ app.post('/api/customer/login', async (req, res) => {
     }
 });
 
-// ✅ Get All Customers - ADD CORS HEADERS
+// ✅ Get All Customers
 app.get('/api/customers', async (req, res) => {
     try {
         const customers = await Customer.find().sort({ createdAt: -1 });
@@ -234,13 +232,151 @@ app.get('/api/customers', async (req, res) => {
     }
 });
 
-// ✅ Keep all your other existing routes (Get Customer by ID, Add Customer, Add Payment, Update Customer, Delete Customer, Delete Payment)
-// ... [ALL YOUR EXISTING ROUTES REMAIN THE SAME] ...
+// ✅ Get Customer by ID
+app.get('/api/customers/:id', async (req, res) => {
+    try {
+        let customer = await Customer.findById(req.params.id);
+        if (!customer) return res.status(404).json({ message: 'Customer not found' });
+        
+        customer = await updateLoanStatus(customer);
+        
+        res.json(customer);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ✅ Owner Add Customer
+app.post('/api/owner/add-customer', async (req, res) => {
+  try {
+    const { name, phone, address, loanStartDate, totalLoanAmount, dailyPayment } = req.body;
+    
+    if (!name || !phone || !address || !loanStartDate || !totalLoanAmount) {
+      return res.status(400).json({ 
+        message: 'All fields are required' 
+      });
+    }
+
+    const existingCustomer = await Customer.findOne({ phone });
+    if (existingCustomer) {
+      return res.status(400).json({ message: 'Phone number already exists' });
+    }
+
+    const newCustomer = new Customer({
+      name,
+      phone,
+      address,
+      loanStartDate,
+      totalLoanAmount,
+      dailyPayment: dailyPayment || Math.round(totalLoanAmount * 0.01),
+      payments: [],
+      status: 'active'
+    });
+
+    await newCustomer.save();
+    
+    res.status(201).json({ 
+      message: 'Customer added successfully', 
+      customer: newCustomer 
+    });
+  } catch (error) {
+    console.error('❌ Add customer error:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Phone number already exists' });
+    }
+    res.status(500).json({ 
+      message: 'Server error while adding customer',
+      error: error.message 
+    });
+  }
+});
+
+// ✅ Add Payment
+app.post('/api/customers/:id/payments', async (req, res) => {
+    try {
+        const { date, amount, principal } = req.body;
+        let customer = await Customer.findById(req.params.id);
+        if (!customer) return res.status(404).json({ message: 'Customer not found' });
+
+        customer.payments.push({ 
+            date, 
+            amount, 
+            principal: principal || amount
+        });
+        
+        customer = await updateLoanStatus(customer);
+        await customer.save();
+
+        res.json({ message: 'Payment added successfully', customer });
+    } catch (error) {
+        console.error('Add payment error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ✅ Update Customer
+app.put('/api/customers/:id', async (req, res) => {
+  try {
+    const { name, phone, address, loanStartDate, totalLoanAmount, dailyPayment } = req.body;
+    
+    const customer = await Customer.findById(req.params.id);
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    customer.name = name;
+    customer.phone = phone;
+    customer.address = address;
+    customer.loanStartDate = loanStartDate;
+    customer.totalLoanAmount = totalLoanAmount;
+    customer.dailyPayment = dailyPayment;
+
+    await customer.save();
+    res.json({ message: 'Customer updated successfully', customer });
+    
+  } catch (error) {
+    console.error('Update customer error:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Phone number already exists' });
+    }
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ✅ Delete Customer
+app.delete('/api/customers/:id', async (req, res) => {
+  try {
+    const customer = await Customer.findByIdAndDelete(req.params.id);
+    if (!customer) return res.status(404).json({ message: 'Customer not found' });
+
+    res.json({ message: 'Customer deleted successfully' });
+  } catch (error) {
+    console.error('Delete customer error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ✅ Delete Payment
+app.delete('/api/customers/:customerId/payments/:paymentDate', async (req, res) => {
+  try {
+    const { customerId, paymentDate } = req.params;
+    const customer = await Customer.findById(customerId);
+    if (!customer) return res.status(404).json({ message: 'Customer not found' });
+
+    customer.payments = customer.payments.filter(p => p.date !== paymentDate);
+    await customer.save();
+
+    res.json({ message: 'Payment deleted successfully' });
+  } catch (error) {
+    console.error('Delete payment error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // ✅ Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
-    console.log(`🔧 CORS enabled for: ${allowedOrigins.join(', ')}`);
+    console.log(`🌐 Health check: https://loanpro-backend.onrender.com/api/health`);
+    console.log(`🔧 CORS: Enabled for ALL origins`);
 });
