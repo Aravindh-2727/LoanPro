@@ -4,321 +4,127 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LoanPro - Loan Management System</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>💰</text></svg>">
 </head>
 <body>
-    <!-- Login Section -->
-    <div id="loginSection" class="section">
-        <div class="login-container">
-            <h1><i class="fas fa-hand-holding-usd"></i> LoanPro</h1>
-            <p class="subtitle">Loan Management System</p>
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>LoanPro</span>
+            </div>
+            <img src="images-removebg-preview.png" alt="">
+            <nav class="nav-links">
+                <a href="#" class="nav-link" id="homeLink">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="#" class="nav-link" id="customerLoginLink">
+                    <i class="fas fa-user"></i> Customer Login
+                </a>
+                <a href="#" class="nav-link" id="ownerLoginLink">
+                    <i class="fas fa-user-shield"></i> Owner Login
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div id="homePage" class="page container">
+        <div class="card">
+            <h1>Welcome to LoanPro</h1>
+            <p>Your trusted partner for managing loans efficiently and transparently.</p>
             
-            <div class="login-card">
-                <h2>Welcome Back</h2>
-                <p>Please choose your role to continue</p>
-                
-                <div class="button-group">
-                    <button id="ownerRoleBtn" class="btn btn-primary btn-large">
-                        <i class="fas fa-user-tie"></i> Owner Login
-                    </button>
-                    <button id="customerRoleBtn" class="btn btn-secondary btn-large">
-                        <i class="fas fa-users"></i> Customer Login
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Role Selection Section -->
-    <div id="roleSelection" class="section hidden">
-        <div class="container">
-            <h1>Select Your Role</h1>
-            <div class="role-buttons">
-                <button id="backToRoleBtn" class="btn btn-outline">
-                    <i class="fas fa-arrow-left"></i> Back to Home
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Owner Login Section -->
-    <div id="ownerLoginSection" class="section hidden">
-        <div class="login-container">
-            <h1><i class="fas fa-user-tie"></i> Owner Login</h1>
             
-            <div class="login-card">
-                <button id="backToRoleBtn" class="btn btn-outline back-btn">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-                
-                <h2>Owner Access</h2>
-                <div class="form-group">
-                    <label for="ownerUsername">Username:</label>
-                    <input type="text" id="ownerUsername" placeholder="Enter username">
+            <h2>How It Works</h2>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3><i class="fas fa-user-check"></i> For Customers</h3>
+                    <p>Login with your phone number to view your loan details, payment history, and remaining balance.</p>
+                    <ul style="text-align: left; margin-top: 15px;">
+                        <li>View your loan status</li>
+                        <li>Track payment history</li>
+                        <li>Check remaining balance</li>
+                        <li>Monitor payment deadlines</li>
+                    </ul>
                 </div>
-                <div class="form-group">
-                    <label for="ownerPassword">Password:</label>
-                    <input type="password" id="ownerPassword" placeholder="Enter password">
+                <div class="stat-card">
+                    <h3><i class="fas fa-user-shield"></i> For Owners</h3>
+                    <p>Access the owner dashboard to manage all customer accounts and track loan performance.</p>
+                    <ul style="text-align: left; margin-top: 15px;">
+                        <li>Manage customer accounts</li>
+                        <li>Track loan performance</li>
+                        <li>Update payment records</li>
+                        <li>Generate financial reports</li>
+                    </ul>
                 </div>
-                <button id="ownerLoginBtn" class="btn btn-primary btn-large">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </button>
             </div>
         </div>
     </div>
 
-    <!-- Customer Login Section -->
-    <div id="customerLoginSection" class="section hidden">
-        <div class="login-container">
-            <h1><i class="fas fa-users"></i> Customer Login</h1>
+    <div id="customerLoginPage" class="page container hidden">
+        <div class="card login-form">
+            <h2><i class="fas fa-user"></i> Customer Login</h2>
+            <p>Enter your phone number to access your account</p>
             
-            <div class="login-card">
-                <button id="backToRoleBtn" class="btn btn-outline back-btn">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-                
-                <h2>Customer Access</h2>
-                <div class="form-group">
-                    <label for="customerPhone">Phone Number:</label>
-                    <input type="text" id="customerPhone" placeholder="Enter your phone number">
-                </div>
-                <button id="customerLoginBtn" class="btn btn-primary btn-large">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </button>
+            <div class="form-group">
+                <label class="form-label" for="customerPhone">
+                    <i class="fas fa-mobile-alt"></i> Phone Number
+                </label>
+                <input type="text" id="customerPhone" placeholder="Enter your phone number">
             </div>
-        </div>
-    </div>
-
-    <!-- Owner Dashboard -->
-    <div id="ownerDashboard" class="section hidden">
-        <header class="dashboard-header">
-            <h1><i class="fas fa-user-tie"></i> Owner Dashboard</h1>
-            <button id="ownerLogoutBtn" class="btn btn-danger">
-                <i class="fas fa-sign-out-alt"></i> Logout
+            
+            <button class="btn btn-primary" id="customerLoginBtn">
+                <i class="fas fa-sign-in-alt"></i> Login
             </button>
-        </header>
-
-        <div class="container">
-            <!-- Analytics Section -->
-            <div class="analytics-grid">
-                <div class="analytics-card">
-                    <h3>Total Customers</h3>
-                    <div class="value" id="analyticsTotalCustomers">0</div>
-                </div>
-                <div class="analytics-card">
-                    <h3>Active Loans</h3>
-                    <div class="value" id="analyticsActiveLoans">0</div>
-                </div>
-                <div class="analytics-card">
-                    <h3>Total Loan Amount</h3>
-                    <div class="value" id="analyticsTotalLoanAmount">₹0</div>
-                </div>
-                <div class="analytics-card">
-                    <h3>Amount Received</h3>
-                    <div class="value" id="analyticsAmountReceived">₹0</div>
-                </div>
-                <div class="analytics-card">
-                    <h3>Active Loans Received</h3>
-                    <div class="value" id="analyticsActiveLoansReceived">₹0</div>
-                </div>
-            </div>
-
-            <!-- Filters and Search -->
-            <div class="filters-section" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
-                    <div class="form-group">
-                        <label for="filterStatus">Status:</label>
-                        <select id="filterStatus">
-                            <option value="all">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="pending">Pending</option>
-                            <option value="deactivated">Completed</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="filterAmount">Loan Amount:</label>
-                        <select id="filterAmount">
-                            <option value="all">All Amounts</option>
-                            <option value="high">High (₹50k+)</option>
-                            <option value="medium">Medium (₹25k-50k)</option>
-                            <option value="low">Low (Under ₹25k)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="filterDate">Loan Date:</label>
-                        <select id="filterDate">
-                            <option value="all">All Dates</option>
-                            <option value="recent">Recent (Last 30 days)</option>
-                            <option value="old">Older (30+ days)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="sortBy">Sort By:</label>
-                        <select id="sortBy">
-                            <option value="name">Name (A-Z)</option>
-                            <option value="name-desc">Name (Z-A)</option>
-                            <option value="amount">Amount (High-Low)</option>
-                            <option value="amount-asc">Amount (Low-High)</option>
-                            <option value="date">Date (Newest)</option>
-                            <option value="date-old">Date (Oldest)</option>
-                            <option value="days">Days Remaining</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 15px; align-items: end;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="searchCustomer">Search Customers:</label>
-                        <input type="text" id="searchCustomer" placeholder="Search by name, phone, or address...">
-                    </div>
-                    <button class="btn btn-primary" onclick="clearAllFilters()" style="margin-bottom: 16px;">
-                        <i class="fas fa-times"></i> Clear Filters
-                    </button>
-                    <button id="addCustomerBtn" class="btn btn-success" style="margin-bottom: 16px;">
-                        <i class="fas fa-plus"></i> Add Customer
-                    </button>
-                </div>
-                
-                <div id="customerCount" style="text-align: center; margin-top: 10px; font-weight: bold; color: #2c3e50;">
-                    0 customers
-                </div>
-            </div>
-
-            <!-- Customers Container -->
-            <div id="customersContainer">
-                <!-- Customers will be loaded here -->
-            </div>
-
-            <!-- Add Customer Form -->
-            <div id="addCustomerForm" class="hidden" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <h3 style="margin-bottom: 20px; color: #2c3e50;"><i class="fas fa-user-plus"></i> Add New Customer</h3>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                    <div class="form-group">
-                        <label for="newCustName">Name:</label>
-                        <input type="text" id="newCustName" placeholder="Enter customer name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="newCustPhone">Phone:</label>
-                        <input type="text" id="newCustPhone" placeholder="Enter phone number" required>
-                    </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label for="newCustAddress">Address:</label>
-                        <textarea id="newCustAddress" placeholder="Enter customer address" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="newCustStart">Loan Start Date:</label>
-                        <input type="date" id="newCustStart" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="newCustDue">Total Loan Amount (₹):</label>
-                        <input type="number" id="newCustDue" placeholder="Enter loan amount" required>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px;">
-                    <button id="saveCustomerBtn" class="btn btn-success">
-                        <i class="fas fa-save"></i> Save Customer
-                    </button>
-                    <button id="cancelAddBtn" class="btn btn-danger">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                </div>
-            </div>
-
-            <!-- Customer List Section -->
-            <div id="customerList">
-                <!-- Customer list will be shown here -->
-            </div>
-
-            <!-- Customer Detail View -->
-            <div id="customerDetailView" class="hidden">
-                <!-- Customer details will be shown here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Customer Dashboard -->
-    <div id="customerDashboard" class="section hidden">
-        <header class="dashboard-header">
-            <h1><i class="fas fa-user"></i> My Loan Dashboard</h1>
-            <button id="customerLogoutBtn" class="btn btn-danger">
-                <i class="fas fa-sign-out-alt"></i> Logout
+            <button class="btn" id="backFromCustomerLogin">
+                <i class="fas fa-arrow-left"></i> Back to Home
             </button>
-        </header>
-
-        <div class="container">
-            <!-- Loading State -->
-            <div id="customerLoading" class="hidden">
-                <div class="loading-container">
-                    <div class="spinner"></div>
-                    <p id="customerLoadingText">Loading...</p>
-                </div>
-            </div>
-
-            <!-- Customer Info -->
-            <div class="customer-info-section" style="background: white; padding: 30px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <h2 style="margin-bottom: 20px; color: #2c3e50;">Customer Information</h2>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                    <div>
-                        <strong>Name:</strong> <span id="customerName">-</span>
-                    </div>
-                    <div>
-                        <strong>Phone:</strong> <span id="customerPhoneDisplay">-</span>
-                    </div>
-                    <div>
-                        <strong>Address:</strong> <span id="customerAddressDisplay">-</span>
-                    </div>
-                    <div>
-                        <strong>Loan Amount:</strong> ₹<span id="loanAmountDisplay">0</span>
-                    </div>
-                    <div>
-                        <strong>Daily Payment:</strong> ₹<span id="dailyPaymentDisplay">0</span>
-                    </div>
-                    <div>
-                        <strong>Start Date:</strong> <span id="startDateDisplay">-</span>
-                    </div>
-                    <div>
-                        <strong>Total Paid:</strong> ₹<span id="totalPaidDisplay">0</span>
-                    </div>
-                    <div>
-                        <strong>Remaining:</strong> ₹<span id="remainingAmountDisplay">0</span>
-                    </div>
-                    <div>
-                        <strong>Status:</strong> <span id="customerStatusDisplay">-</span>
-                    </div>
-                    <div>
-                        <strong>Days Status:</strong> <span id="daysStatusDisplay">-</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payment Progress -->
-            <div id="progressSection" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <h3 style="margin-bottom: 15px;">Payment Progress</h3>
-                <div style="background: #ecf0f1; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 10px;">
-                    <div id="paymentProgressFill" style="height: 100%; background: #27ae60; width: 0%; transition: width 0.3s ease;"></div>
-                </div>
-                <div style="text-align: center; font-weight: bold;">
-                    <span id="paymentProgressText">0% Paid</span>
-                    <span id="progressAmount" style="color: #666; margin-left: 10px;">(₹0 of ₹0)</span>
-                </div>
-            </div>
-
-            <!-- Payment History -->
-            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <h3 style="margin-bottom: 20px;">Payment History</h3>
-                <div id="paymentHistoryContainer">
-                    <!-- Payment history will be loaded here -->
-                </div>
-            </div>
         </div>
     </div>
+
+    <div id="ownerLoginPage" class="page container hidden">
+        <div class="card login-form">
+            <h2><i class="fas fa-user-shield"></i> Owner Login</h2>
+            <p>Enter your credentials to access the owner dashboard</p>
+            
+            <div class="form-group">
+                <label class="form-label" for="ownerEmail">
+                    <i class="fas fa-envelope"></i> Email
+                </label>
+                <input type="email" id="ownerEmail" placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="ownerPassword">
+                    <i class="fas fa-lock"></i> Password
+                </label>
+                <input type="password" id="ownerPassword" placeholder="Enter your password">
+            </div>
+            
+            <button class="btn btn-primary" id="ownerLoginBtn">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            <button class="btn" id="backFromOwnerLogin">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </button>
+        </div>
+    </div>
+
+    <!-- Debug Console (remove in production) -->
+<div style="position: fixed; bottom: 10px; right: 10px; background: #333; color: white; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 1000;">
+    <div>Console: <span id="debugStatus">Ready</span></div>
+</div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2023 LoanPro - Loan Management System. All rights reserved.</p>
+            <p>Secure. Reliable. Transparent.</p>
+        </div>
+
+    </footer>
 
     <script src="script.js"></script>
-    <script src="owner.js"></script>
-    <script src="customer.js"></script>
 </body>
 </html>
