@@ -1,6 +1,11 @@
 // script.js - REMOVE API_BASE DECLARATION FROM HERE
 console.log("🌐 Frontend Loaded");
 
+// script.js - KEEP THIS DECLARATION
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? "http://localhost:5000" 
+    : "https://loanpro-backend-t41k.onrender.com";
+
 // Global State
 let currentPage = "home";
 
