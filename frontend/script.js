@@ -1,9 +1,5 @@
-// script.js - UPDATED WITH BETTER ERROR HANDLING
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? "http://localhost:5000" 
-    : "https://loanpro-backend-t41k.onrender.com";
-
-console.log("🌐 Using API Base:", API_BASE);
+// script.js - REMOVE API_BASE DECLARATION FROM HERE
+console.log("🌐 Frontend Loaded");
 
 // Global State
 let currentPage = "home";
@@ -18,7 +14,7 @@ const homeStats = document.getElementById("homeStats");
 async function checkServerConnection() {
   try {
     console.log("🔍 Checking server connection...");
-    const response = await fetch(`${API_BASE}/api/health`, {
+    const response = await fetch(`${window.API_BASE}/api/health`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -103,7 +99,7 @@ async function loginCustomer(e) {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/customer/login`, {
+    const res = await fetch(`${window.API_BASE}/api/customer/login`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json"
@@ -144,7 +140,7 @@ async function loginOwner(e) {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/owner/login`, {
+    const res = await fetch(`${window.API_BASE}/api/owner/login`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json"
@@ -177,7 +173,7 @@ async function loadHomeStats() {
   try {
     showLoading("homeStats", "Loading statistics...");
     
-    const res = await fetch(`${API_BASE}/api/analytics`, {
+    const res = await fetch(`${window.API_BASE}/api/analytics`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
