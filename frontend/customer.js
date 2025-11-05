@@ -1,16 +1,11 @@
-// customer.js - UPDATED FOR DEPLOYMENT
+// customer.js - UPDATED TO USE GLOBAL API_BASE
 console.log("👤 Customer Dashboard Loaded");
 
-// Define API_BASE for deployment
-// customer.js - UPDATE FIRST LINE ONLY
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? "http://localhost:5000" 
-    : "https://loanpro-backend-t41k.onrender.com";
+// Use the global API_BASE variable
+console.log("🌐 Using API Base:", window.API_BASE);
 
-// REST OF YOUR EXISTING customer.js CODE REMAINS EXACTLY THE SAME
 // Check if customer is logged in
 const loggedInCustomer = JSON.parse(localStorage.getItem("loggedInCustomer"));
-// ... continue with all your existing customer.js code ...
 
 if (!loggedInCustomer) {
   alert("No customer logged in!");
@@ -19,6 +14,19 @@ if (!loggedInCustomer) {
   loadCustomerDashboard(loggedInCustomer);
 }
 
+async function loadCustomerDashboard(customer) {
+  document.getElementById("dashboardStatus").textContent = "Loading your dashboard...";
+
+  try {
+    const res = await fetch(`${window.API_BASE}/api/customers/${customer._id}`);
+    
+    if (!res.ok) {
+      throw new Error(`Failed to fetch customer data: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    
+    // ... REST OF YOUR customer.js CODE REMAINS THE SAME, JUST REPLACE ALL API_BASE WITH window.API_BASE ...
 // ✅ Calculate Customer Status (same as owner dashboard)
 function calculateCustomerStatus(customer) {
   const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
