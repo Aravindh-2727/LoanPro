@@ -597,3 +597,30 @@ window.addEventListener("DOMContentLoaded", () => {
 document.getElementById("ownerLogoutBtn")?.addEventListener("click", () => {
   window.location.href = "index.html";
 });
+
+// ==================== MISSING FUNCTION DECLARATIONS ====================
+
+// Add these missing function declarations at the end
+function editCustomer(customerId) {
+  console.log("Edit customer:", customerId);
+  alert("Edit customer functionality would go here");
+}
+
+function addPayment() {
+  console.log("Add payment for:", currentCustomerId);
+  alert("Add payment functionality would go here");
+}
+
+function deleteCustomer(customerId, customerName) {
+  if (confirm(`Are you sure you want to delete customer "${customerName}"? This action cannot be undone.`)) {
+    console.log("Delete customer:", customerId);
+    alert("Delete customer functionality would go here");
+  }
+}
+
+function deletePayment(customerId, paymentDate) {
+  if (confirm(`Are you sure you want to delete payment from ${paymentDate}?`)) {
+    console.log("Delete payment:", customerId, paymentDate);
+    alert("Delete payment functionality would go here");
+  }
+}
