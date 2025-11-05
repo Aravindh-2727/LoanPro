@@ -7,6 +7,24 @@ window.API_BASE = API_BASE;
 let allCustomers = [];
 let currentCustomerId = null;
 
+
+// ✅ Global functions to avoid undefined errors
+window.calculateCustomerStatus = function(customer) {
+    const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+
+    if (totalPaid >= customer.totalLoanAmount) return 'deactivated';
+
+    const days = Math.floor((new Date() - new Date(customer.loanStartDate)) / (1000*60*60*24));
+    if (days > 100) return 'pending';
+
+    return 'active';
+};
+
+window.showError = function(msg) {
+    alert(msg);
+};
+
+
 // 1. CALCULATE CUSTOMER STATUS - DEFINED FIRST
 function calculateCustomerStatus(customer) {
     const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
@@ -240,17 +258,17 @@ function setupFilters() {
     }
 }
 
-// ✅ 9. FIXED: ADD OWNER DASHBOARD LOADER
 async function loadOwnerDashboard() {
     try {
         console.log("🏁 Owner Dashboard Initialized");
-        await loadCustomers(); 
+        await loadCustomers();
         console.log("✅ Dashboard Ready");
     } catch (err) {
         console.error("❌ Error loading owner dashboard:", err);
         showError("Dashboard failed to load");
     }
 }
+
 
 // ✅ ERROR HANDLER
 function showError(msg) {
