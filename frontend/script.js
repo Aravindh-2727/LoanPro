@@ -1,4 +1,4 @@
-// script.js - REMOVE API_BASE DECLARATION FROM HERE
+// script.js - UPDATED WITH BETTER ERROR HANDLING
 console.log("🌐 Frontend Loaded");
 
 // Global State
@@ -14,6 +14,7 @@ const homeStats = document.getElementById("homeStats");
 async function checkServerConnection() {
   try {
     console.log("🔍 Checking server connection to:", window.API_BASE);
+    
     const response = await fetch(`${window.API_BASE}/api/health`, {
       method: 'GET',
       headers: {
@@ -22,13 +23,24 @@ async function checkServerConnection() {
       mode: 'cors'
     });
     
+    console.log("📡 Health check response status:", response.status);
+    
     if (!response.ok) {
-      throw new Error(`Server returned ${response.status}`);
+      let errorMessage = `Server returned ${response.status}`;
+      try {
+        const errorText = await response.text();
+        console.error("❌ Health check error response:", errorText);
+        if (errorText.includes('<!DOCTYPE')) {
+          errorMessage = "Server returned HTML instead of JSON. Backend might not be running correctly.";
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+      throw new Error(errorMessage);
     }
     
     const data = await response.json();
-    console.log("✅ Server:", data.status);
-    console.log("📊 Database:", data.database);
+    console.log("✅ Server health:", data);
     return true;
   } catch (error) {
     console.error("❌ Cannot connect to backend:", error);
@@ -36,6 +48,8 @@ async function checkServerConnection() {
     return false;
   }
 }
+
+// ... rest of script.js remains the same ...
 
 // ✅ Show connection error
 function showConnectionError() {
