@@ -1,16 +1,11 @@
-// owner.js - UPDATED FOR DEPLOYMENT
+// owner.js - UPDATED TO USE GLOBAL API_BASE
 console.log("📊 Owner Dashboard Loaded");
 
-// Define API_BASE for deployment
-// owner.js - UPDATE FIRST LINE ONLY
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? "http://localhost:5000" 
-    : "https://loanpro-backend-t41k.onrender.com";
+// Use the global API_BASE variable instead of declaring a new one
+console.log("🌐 Using API Base:", window.API_BASE);
 
-// REST OF YOUR EXISTING owner.js CODE REMAINS EXACTLY THE SAME
 let allCustomers = [];
 let currentCustomerId = null;
-// ... continue with all your existing owner.js code ...
 
 // 🧭 DOM Elements
 const customersContainer = document.getElementById("customersContainer");
@@ -27,7 +22,7 @@ async function loadOwnerDashboard() {
     showLoading("customersContainer", "Loading customers...");
     
     console.log("🔄 Loading customers...");
-    const res = await fetch(`${API_BASE}/api/customers`);
+    const res = await fetch(`${window.API_BASE}/api/customers`);
     
     if (!res.ok) {
       throw new Error(`Failed to fetch customers: ${res.status}`);
@@ -51,6 +46,8 @@ async function loadOwnerDashboard() {
     showError("customersContainer", "Failed to load customers. Check backend connection.");
   }
 }
+
+// ... REST OF YOUR owner.js CODE REMAINS THE SAME, JUST REPLACE ALL API_BASE WITH window.API_BASE ...
 
 // ✅ Filter and Sort Functionality
 function setupFilters() {
