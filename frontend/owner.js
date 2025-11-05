@@ -1,4 +1,4 @@
-// owner.js - FIXED VERSION WITH PROPER FUNCTION ORDER
+// owner.js - FIXED VERSION WITHOUT LOADING ANIMATION
 console.log("📊 Owner Dashboard Loaded");
 
 // Use the global API_BASE variable with fallback
@@ -20,31 +20,6 @@ const customerListSection = document.getElementById("customerList");
 const backToListBtn = document.getElementById("backToListBtn");
 
 // ==================== UTILITY FUNCTIONS ====================
-
-function showLoading(containerId, message = "Loading...") {
-  const container = document.getElementById(containerId);
-  if (container) {
-    container.innerHTML = `
-      <div class="loading-container">
-        <div class="spinner"></div>
-        <p>${message}</p>
-      </div>
-    `;
-  }
-}
-
-function showError(containerId, message) {
-  const container = document.getElementById(containerId);
-  if (container) {
-    container.innerHTML = `
-      <div class="error-container">
-        <i class="fas fa-exclamation-triangle"></i>
-        <p>${message}</p>
-        <button class="btn btn-primary" onclick="loadOwnerDashboard()">Retry</button>
-      </div>
-    `;
-  }
-}
 
 function calculateCustomerStatus(customer) {
   const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
@@ -370,7 +345,7 @@ async function viewCustomerDetails(customerId) {
     const isDeactivated = customerWithStatus.calculatedStatus === 'deactivated';
     const isPending = customerWithStatus.calculatedStatus === 'pending';
     
-    // Show customer detail view immediately without loading animation
+    // Show customer detail view immediately
     if (customerDetailView) customerDetailView.classList.remove("hidden");
     if (customerListSection) customerListSection.classList.add("hidden");
     
@@ -534,7 +509,10 @@ function renderPaymentHistoryNew(payments, totalPaid) {
 
 async function loadOwnerDashboard() {
   try {
-    showLoading("customersContainer", "Loading customers...");
+    // Remove loading animation - just show empty container
+    if (customersContainer) {
+      customersContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Loading customers...</div>';
+    }
     
     console.log("🔄 Loading customers from:", `${window.API_BASE}/api/customers`);
     
@@ -550,25 +528,13 @@ async function loadOwnerDashboard() {
     console.log("📡 Response ok:", response.ok);
     
     if (!response.ok) {
-        let errorMessage = `HTTP ${response.status}`;
-        try {
-            const errorData = await response.text();
-            console.error("❌ Error response:", errorData);
-            if (errorData.includes('<!DOCTYPE')) {
-                errorMessage = "Server returned HTML instead of JSON. Check if backend is running correctly.";
-            } else {
-                errorMessage = errorData;
-            }
-        } catch (e) {
-            // Ignore if we can't parse error response
-        }
-        throw new Error(`Failed to fetch customers: ${errorMessage}`);
+        throw new Error(`Failed to fetch customers: HTTP ${response.status}`);
     }
     
     const customers = await response.json();
     console.log("✅ Successfully loaded customers:", customers.length);
     
-    // Calculate pending status for each customer
+    // Calculate status for each customer
     allCustomers = customers.map(customer => calculateCustomerStatus(customer));
 
     // Update Analytics
@@ -580,7 +546,16 @@ async function loadOwnerDashboard() {
     
   } catch (err) {
     console.error("❌ Error loading owner dashboard:", err);
-    showError("customersContainer", `Failed to load customers: ${err.message}`);
+    if (customersContainer) {
+      customersContainer.innerHTML = `
+        <div class="error-container" style="text-align: center; padding: 40px; color: #e74c3c;">
+          <i class="fas fa-exclamation-triangle fa-2x"></i>
+          <h3>Failed to load customers</h3>
+          <p>${err.message}</p>
+          <button class="btn btn-primary" onclick="loadOwnerDashboard()">Retry</button>
+        </div>
+      `;
+    }
   }
 }
 
@@ -600,7 +575,6 @@ document.getElementById("ownerLogoutBtn")?.addEventListener("click", () => {
 
 // ==================== MISSING FUNCTION DECLARATIONS ====================
 
-// Add these missing function declarations at the end
 function editCustomer(customerId) {
   console.log("Edit customer:", customerId);
   alert("Edit customer functionality would go here");
@@ -624,3 +598,9 @@ function deletePayment(customerId, paymentDate) {
     alert("Delete payment functionality would go here");
   }
 }
+
+// Back to list functionality
+document.getElementById("backToListBtn")?.addEventListener("click", () => {
+  if (customerDetailView) customerDetailView.classList.add("hidden");
+  if (customerListSection) customerListSection.classList.remove("hidden");
+});
