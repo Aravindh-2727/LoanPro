@@ -1,4 +1,4 @@
-// script.js - UPDATED FOR DEPLOYMENT
+// script.js - UPDATED WITH BETTER ERROR HANDLING
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? "http://localhost:5000" 
     : "https://loanpro-backend.onrender.com";
@@ -14,18 +14,44 @@ const customerLoginPage = document.getElementById("customerLoginPage");
 const ownerLoginPage = document.getElementById("ownerLoginPage");
 const homeStats = document.getElementById("homeStats");
 
-// ✅ Check server & database connection
+// ✅ Enhanced server connection check
 async function checkServerConnection() {
   try {
     console.log("🔍 Checking server connection...");
-    const response = await fetch(`${API_BASE}/api/health`);
+    const response = await fetch(`${API_BASE}/api/health`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      mode: 'cors'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+    
     const data = await response.json();
     console.log("✅ Server:", data.status);
     console.log("📊 Database:", data.database);
     return true;
   } catch (error) {
     console.error("❌ Cannot connect to backend:", error);
+    showConnectionError();
     return false;
+  }
+}
+
+// ✅ Show connection error
+function showConnectionError() {
+  if (homeStats) {
+    homeStats.innerHTML = `
+      <div class="error-container">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>Connection Error</h3>
+        <p>Unable to connect to the server. Please try again later.</p>
+        <button class="btn btn-primary" onclick="checkServerConnection()">Retry Connection</button>
+      </div>
+    `;
   }
 }
 
@@ -64,7 +90,7 @@ function showOwnerLogin() {
   if (ownerLoginPage) ownerLoginPage.classList.remove("hidden");
 }
 
-// ✅ Customer Login
+// ✅ Enhanced Customer Login with better error handling
 async function loginCustomer(e) {
   if (e) e.preventDefault();
   
@@ -79,26 +105,33 @@ async function loginCustomer(e) {
   try {
     const res = await fetch(`${API_BASE}/api/customer/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ phone }),
     });
 
     if (!res.ok) {
       const errorData = await res.json();
-      throw new Error(errorData.message || "Invalid phone number");
+      throw new Error(errorData.message || "Login failed");
     }
 
     const data = await res.json();
-    localStorage.setItem("loggedInCustomer", JSON.stringify(data));
-    window.location.href = "customer.html";
+    
+    if (data.success) {
+      localStorage.setItem("loggedInCustomer", JSON.stringify(data));
+      window.location.href = "customer.html";
+    } else {
+      throw new Error(data.message || "Login failed");
+    }
     
   } catch (err) {
     console.error("❌ Login error:", err);
-    alert(err.message);
+    alert(err.message || "Failed to connect to server. Please try again.");
   }
 }
 
-// ✅ Owner Login
+// ✅ Enhanced Owner Login with better error handling
 async function loginOwner(e) {
   if (e) e.preventDefault();
   
@@ -113,7 +146,9 @@ async function loginOwner(e) {
   try {
     const res = await fetch(`${API_BASE}/api/owner/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ email, password }),
     });
 
@@ -123,20 +158,36 @@ async function loginOwner(e) {
     }
 
     const data = await res.json();
-    alert("✅ Login successful!");
-    window.location.href = "owner.html";
+    
+    if (data.success) {
+      alert("✅ Login successful!");
+      window.location.href = "owner.html";
+    } else {
+      throw new Error(data.message || "Login failed");
+    }
     
   } catch (err) {
     console.error("Owner login error:", err);
-    alert(err.message);
+    alert(err.message || "Failed to connect to server. Please try again.");
   }
 }
 
-// ✅ Load Home Stats
+// ✅ Enhanced Load Home Stats
 async function loadHomeStats() {
   try {
-    const res = await fetch(`${API_BASE}/api/analytics`);
-    if (!res.ok) throw new Error("Failed to fetch analytics");
+    showLoading("homeStats", "Loading statistics...");
+    
+    const res = await fetch(`${API_BASE}/api/analytics`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      mode: 'cors'
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Failed to fetch analytics: ${res.status}`);
+    }
     
     const data = await res.json();
 
@@ -156,9 +207,20 @@ async function loadHomeStats() {
     `;
   } catch (err) {
     console.error("❌ Error loading home stats:", err);
-    if (homeStats) {
-      homeStats.innerHTML = `<p>Unable to load statistics</p>`;
-    }
+    showConnectionError();
+  }
+}
+
+// ✅ Show Loading Animation
+function showLoading(containerId, message = "Loading...") {
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.innerHTML = `
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>${message}</p>
+      </div>
+    `;
   }
 }
 
@@ -167,4 +229,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   console.log("🚀 Frontend loaded");
   initializeEventListeners();
   showHomePage();
+  await checkServerConnection();
 });
