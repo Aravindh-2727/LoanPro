@@ -1,14 +1,16 @@
 // owner.js - UPDATED FOR DEPLOYMENT
 console.log("📊 Owner Dashboard Loaded");
 
-// Define API_BASE for deployment - UPDATED TO PREVENT CONFLICT
-const OWNER_API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+// Define API_BASE for deployment
+// owner.js - UPDATE FIRST LINE ONLY
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? "http://localhost:5000" 
-    : "https://loanpro-backend-t41k.onrender.com";
+    : "https://loanpro-backend.onrender.com";
 
 // REST OF YOUR EXISTING owner.js CODE REMAINS EXACTLY THE SAME
 let allCustomers = [];
 let currentCustomerId = null;
+// ... continue with all your existing owner.js code ...
 
 // 🧭 DOM Elements
 const customersContainer = document.getElementById("customersContainer");
@@ -25,7 +27,7 @@ async function loadOwnerDashboard() {
     showLoading("customersContainer", "Loading customers...");
     
     console.log("🔄 Loading customers...");
-    const res = await fetch(`${OWNER_API_BASE}/api/customers`);
+    const res = await fetch(`${API_BASE}/api/customers`);
     
     if (!res.ok) {
       throw new Error(`Failed to fetch customers: ${res.status}`);
@@ -461,7 +463,7 @@ if (searchInput) {
 // ✅ Edit Customer Function
 async function editCustomer(customerId) {
   try {
-    const res = await fetch(`${OWNER_API_BASE}/api/customers/${customerId}`);
+    const res = await fetch(`${API_BASE}/api/customers/${customerId}`);
     if (!res.ok) throw new Error("Failed to fetch customer details");
     
     const customer = await res.json();
@@ -556,7 +558,7 @@ async function updateCustomer(customerId) {
   };
 
   try {
-    const res = await fetch(`${OWNER_API_BASE}/api/customers/${customerId}`, {
+    const res = await fetch(`${API_BASE}/api/customers/${customerId}`, {
       method: "PUT",
       headers: { 
         "Content-Type": "application/json",
@@ -635,7 +637,7 @@ document.getElementById("saveCustomerBtn")?.addEventListener("click", async () =
   };
 
   try {
-    const res = await fetch(`${OWNER_API_BASE}/api/owner/add-customer`, {
+    const res = await fetch(`${API_BASE}/api/owner/add-customer`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -691,7 +693,7 @@ async function viewCustomerDetails(customerId) {
     console.log("👀 Loading customer details:", customerId);
     currentCustomerId = customerId;
     
-    const res = await fetch(`${OWNER_API_BASE}/api/customers/${customerId}`);
+    const res = await fetch(`${API_BASE}/api/customers/${customerId}`);
     if (!res.ok) throw new Error("Failed to fetch customer details");
     
     const customer = await res.json();
@@ -890,7 +892,7 @@ function renderPaymentHistoryNew(payments, totalPaid) {
 async function addPayment() {
   try {
     // Check if loan is deactivated
-    const customerRes = await fetch(`${OWNER_API_BASE}/api/customers/${currentCustomerId}`);
+    const customerRes = await fetch(`${API_BASE}/api/customers/${currentCustomerId}`);
     const customer = await customerRes.json();
     const customerWithStatus = calculateCustomerStatus(customer);
     
@@ -925,7 +927,7 @@ async function addPayment() {
       principal: principal
     };
     
-    const res = await fetch(`${OWNER_API_BASE}/api/customers/${currentCustomerId}/payments`, {
+    const res = await fetch(`${API_BASE}/api/customers/${currentCustomerId}/payments`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -955,7 +957,7 @@ async function deletePayment(customerId, paymentDate) {
   }
   
   try {
-    const res = await fetch(`${OWNER_API_BASE}/api/customers/${customerId}/payments/${encodeURIComponent(paymentDate)}`, {
+    const res = await fetch(`${API_BASE}/api/customers/${customerId}/payments/${encodeURIComponent(paymentDate)}`, {
       method: "DELETE",
     });
     
@@ -975,7 +977,7 @@ async function deletePayment(customerId, paymentDate) {
 async function deleteCustomer(customerId, customerName) {
   // Get customer details to check status
   try {
-    const res = await fetch(`${OWNER_API_BASE}/api/customers/${customerId}`);
+    const res = await fetch(`${API_BASE}/api/customers/${customerId}`);
     if (!res.ok) throw new Error("Failed to fetch customer details");
     
     const customer = await res.json();
@@ -993,7 +995,7 @@ async function deleteCustomer(customerId, customerName) {
     
     showLoading("customersContainer", "Deleting customer...");
     
-    const deleteRes = await fetch(`${OWNER_API_BASE}/api/customers/${customerId}`, {
+    const deleteRes = await fetch(`${API_BASE}/api/customers/${customerId}`, {
       method: "DELETE",
     });
     
