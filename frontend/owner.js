@@ -1,16 +1,16 @@
-// owner.js - FIXED VERSION WITHOUT LOADING ANIMATION
+// owner.js - UPDATED WITH BETTER ERROR HANDLING
 console.log("📊 Owner Dashboard Loaded");
 
 // Use the global API_BASE variable with fallback
 const API_BASE = window.API_BASE || "https://loanpro-backend-t41k.onrender.com";
-window.API_BASE = API_BASE;
+window.API_BASE = API_BASE; // Ensure it's set
 
 console.log("🌐 Using API Base:", window.API_BASE);
 
 let allCustomers = [];
 let currentCustomerId = null;
 
-// DOM Elements
+// 🧭 DOM Elements
 const customersContainer = document.getElementById("customersContainer");
 const searchInput = document.getElementById("searchCustomer");
 const addCustomerBtn = document.getElementById("addCustomerBtn");
@@ -18,6 +18,47 @@ const addCustomerForm = document.getElementById("addCustomerForm");
 const customerDetailView = document.getElementById("customerDetailView");
 const customerListSection = document.getElementById("customerList");
 const backToListBtn = document.getElementById("backToListBtn");
+
+// ✅ Load Dashboard + Customers with Loading Animation
+async function loadOwnerDashboard() {
+  try {
+    showLoading("customersContainer", "Loading customers...");
+    
+    console.log("🔄 Loading customers from:", `${window.API_BASE}/api/customers`);
+    
+    const response = await fetch(`${window.API_BASE}/api/customers`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        mode: 'cors'
+    });
+    
+    console.log("📡 Response status:", response.status);
+    console.log("📡 Response ok:", response.ok);
+    
+    if (!response.ok) {
+        // Try to get error message from response
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+            const errorData = await response.text();
+            console.error("❌ Error response:", errorData);
+            if (errorData.includes('<!DOCTYPE')) {
+                errorMessage = "Server returned HTML instead of JSON. Check if backend is running correctly.";
+            } else {
+                errorMessage = errorData;
+            }
+        } catch (e) {
+            // Ignore if we can't parse error response
+        }
+        throw new Error(`Failed to fetch customers: ${errorMessage}`);
+    }
+    
+    const customers = await response.json();
+    console.log("✅ Successfully loaded customers:", customers.length);
+    
+    // Calculate pending status for each customer
+    allCustomers = customers.map(customer => calculateCustomerStatus(customer));
 
 // ==================== UTILITY FUNCTIONS ====================
 
