@@ -1,4 +1,4 @@
-// owner.js - FIXED VERSION WITH CONSISTENT API_BASE USAGE
+// owner.js - COMPLETE VERSION WITH ALL FUNCTIONS
 console.log("📊 Owner Dashboard Loaded");
 
 // Use the global API_BASE variable with fallback
@@ -71,6 +71,87 @@ async function loadOwnerDashboard() {
     console.error("❌ Error loading owner dashboard:", err);
     showError("customersContainer", `Failed to load customers: ${err.message}`);
   }
+}
+
+// ✅ Calculate Customer Status (Active, Pending, or Deactivated)
+function calculateCustomerStatus(customer) {
+  const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+  
+  // If fully paid, status is deactivated
+  if (totalPaid >= customer.totalLoanAmount) {
+    return { ...customer, calculatedStatus: 'deactivated' };
+  }
+  
+  // Calculate days since loan start
+  const loanStartDate = new Date(customer.loanStartDate);
+  const today = new Date();
+  const daysSinceStart = Math.floor((today - loanStartDate) / (1000 * 60 * 60 * 24));
+  
+  // If more than 100 days and not fully paid, status is pending
+  if (daysSinceStart > 100) {
+    return { ...customer, calculatedStatus: 'pending' };
+  }
+  
+  // Otherwise, status is active
+  return { ...customer, calculatedStatus: 'active' };
+}
+
+// ✅ Show Loading Animation
+function showLoading(containerId, message = "Loading...") {
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.innerHTML = `
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>${message}</p>
+      </div>
+    `;
+  }
+}
+
+// ✅ Show Error Message
+function showError(containerId, message) {
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.innerHTML = `
+      <div class="error-container">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>${message}</p>
+        <button class="btn btn-primary" onclick="loadOwnerDashboard()">Retry</button>
+      </div>
+    `;
+  }
+}
+
+// ✅ Update Analytics - ENHANCED VERSION
+function updateAnalytics(customers) {
+  const totalCustomersElem = document.getElementById("analyticsTotalCustomers");
+  const activeLoansElem = document.getElementById("analyticsActiveLoans");
+  const totalLoanAmountElem = document.getElementById("analyticsTotalLoanAmount");
+  const amountReceivedElem = document.getElementById("analyticsAmountReceived");
+  const activeLoansReceivedElem = document.getElementById("analyticsActiveLoansReceived");
+
+  if (totalCustomersElem) totalCustomersElem.textContent = customers.length;
+
+  const activeLoans = customers.filter(c => c.calculatedStatus === 'active').length;
+  if (activeLoansElem) activeLoansElem.textContent = activeLoans;
+
+  let totalLoan = 0, amountReceived = 0, activeLoansReceived = 0;
+  
+  customers.forEach(c => {
+    totalLoan += c.totalLoanAmount || 0;
+    const customerPaid = c.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+    amountReceived += customerPaid;
+    
+    // Calculate amount received only from active loans
+    if (c.calculatedStatus === 'active') {
+      activeLoansReceived += customerPaid;
+    }
+  });
+
+  if (totalLoanAmountElem) totalLoanAmountElem.textContent = "₹" + totalLoan.toLocaleString();
+  if (amountReceivedElem) amountReceivedElem.textContent = "₹" + amountReceived.toLocaleString();
+  if (activeLoansReceivedElem) activeLoansReceivedElem.textContent = "₹" + activeLoansReceived.toLocaleString();
 }
 
 // ✅ Filter and Sort Functionality
@@ -168,6 +249,22 @@ function sortCustomers(customers, sortBy) {
     });
 }
 
+// ✅ Calculate Days Status
+function calculateDaysStatus(customer) {
+  const loanStartDate = new Date(customer.loanStartDate);
+  const today = new Date();
+  const daysSinceStart = Math.floor((today - loanStartDate) / (1000 * 60 * 60 * 24));
+  
+  if (customer.calculatedStatus === 'deactivated') {
+    return { status: 'completed', days: 0 };
+  } else if (customer.calculatedStatus === 'pending') {
+    return { status: 'overdue', days: daysSinceStart - 100 };
+  } else {
+    const daysLeft = Math.max(0, 100 - daysSinceStart);
+    return { status: 'active', days: daysLeft };
+  }
+}
+
 // ✅ Update Customer Count
 function updateCustomerCount(count) {
     const customerCountElem = document.getElementById('customerCount');
@@ -185,87 +282,6 @@ function clearAllFilters() {
     document.getElementById('searchCustomer').value = '';
     
     applyFilters();
-}
-
-// ✅ Calculate Customer Status (Active, Pending, or Deactivated)
-function calculateCustomerStatus(customer) {
-  const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-  
-  // If fully paid, status is deactivated
-  if (totalPaid >= customer.totalLoanAmount) {
-    return { ...customer, calculatedStatus: 'deactivated' };
-  }
-  
-  // Calculate days since loan start
-  const loanStartDate = new Date(customer.loanStartDate);
-  const today = new Date();
-  const daysSinceStart = Math.floor((today - loanStartDate) / (1000 * 60 * 60 * 24));
-  
-  // If more than 100 days and not fully paid, status is pending
-  if (daysSinceStart > 100) {
-    return { ...customer, calculatedStatus: 'pending' };
-  }
-  
-  // Otherwise, status is active
-  return { ...customer, calculatedStatus: 'active' };
-}
-
-// ✅ Show Loading Animation
-function showLoading(containerId, message = "Loading...") {
-  const container = document.getElementById(containerId);
-  if (container) {
-    container.innerHTML = `
-      <div class="loading-container">
-        <div class="spinner"></div>
-        <p>${message}</p>
-      </div>
-    `;
-  }
-}
-
-// ✅ Show Error Message
-function showError(containerId, message) {
-  const container = document.getElementById(containerId);
-  if (container) {
-    container.innerHTML = `
-      <div class="error-container">
-        <i class="fas fa-exclamation-triangle"></i>
-        <p>${message}</p>
-        <button class="btn btn-primary" onclick="loadOwnerDashboard()">Retry</button>
-      </div>
-    `;
-  }
-}
-
-// ✅ Update Analytics - ENHANCED VERSION
-function updateAnalytics(customers) {
-  const totalCustomersElem = document.getElementById("analyticsTotalCustomers");
-  const activeLoansElem = document.getElementById("analyticsActiveLoans");
-  const totalLoanAmountElem = document.getElementById("analyticsTotalLoanAmount");
-  const amountReceivedElem = document.getElementById("analyticsAmountReceived");
-  const activeLoansReceivedElem = document.getElementById("analyticsActiveLoansReceived");
-
-  if (totalCustomersElem) totalCustomersElem.textContent = customers.length;
-
-  const activeLoans = customers.filter(c => c.calculatedStatus === 'active').length;
-  if (activeLoansElem) activeLoansElem.textContent = activeLoans;
-
-  let totalLoan = 0, amountReceived = 0, activeLoansReceived = 0;
-  
-  customers.forEach(c => {
-    totalLoan += c.totalLoanAmount || 0;
-    const customerPaid = c.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-    amountReceived += customerPaid;
-    
-    // Calculate amount received only from active loans
-    if (c.calculatedStatus === 'active') {
-      activeLoansReceived += customerPaid;
-    }
-  });
-
-  if (totalLoanAmountElem) totalLoanAmountElem.textContent = "₹" + totalLoan.toLocaleString();
-  if (amountReceivedElem) amountReceivedElem.textContent = "₹" + amountReceived.toLocaleString();
-  if (activeLoansReceivedElem) activeLoansReceivedElem.textContent = "₹" + activeLoansReceived.toLocaleString();
 }
 
 // ✅ Render Customer List as Full Width Table
@@ -409,22 +425,6 @@ function renderCustomerRowFullWidth(customer) {
       </td>
     </tr>
   `;
-}
-
-// ✅ Calculate Days Status
-function calculateDaysStatus(customer) {
-  const loanStartDate = new Date(customer.loanStartDate);
-  const today = new Date();
-  const daysSinceStart = Math.floor((today - loanStartDate) / (1000 * 60 * 60 * 24));
-  
-  if (customer.calculatedStatus === 'deactivated') {
-    return { status: 'completed', days: 0 };
-  } else if (customer.calculatedStatus === 'pending') {
-    return { status: 'overdue', days: daysSinceStart - 100 };
-  } else {
-    const daysLeft = Math.max(0, 100 - daysSinceStart);
-    return { status: 'active', days: daysLeft };
-  }
 }
 
 // ✅ Enhanced Search Box Functionality with Filters
