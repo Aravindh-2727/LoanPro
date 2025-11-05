@@ -1,7 +1,10 @@
-// customer.js - UPDATED TO USE GLOBAL API_BASE
+// customer.js - UPDATED WITH FALLBACK
 console.log("👤 Customer Dashboard Loaded");
 
-// Use the global API_BASE variable
+// Use the global API_BASE variable with fallback
+const API_BASE = window.API_BASE || "https://loanpro-backend-t41k.onrender.com";
+window.API_BASE = API_BASE;
+
 console.log("🌐 Using API Base:", window.API_BASE);
 
 // Check if customer is logged in
@@ -13,6 +16,8 @@ if (!loggedInCustomer) {
 } else {
   loadCustomerDashboard(loggedInCustomer);
 }
+
+// ... rest of customer.js remains the same ...
 
 async function loadCustomerDashboard(customer) {
   document.getElementById("dashboardStatus").textContent = "Loading your dashboard...";
