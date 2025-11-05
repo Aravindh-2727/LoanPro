@@ -1,6 +1,8 @@
 // owner.js - UPDATED TO USE GLOBAL API_BASE
 console.log("📊 Owner Dashboard Loaded");
 
+const API_BASE_URL = window.location.origin + '/api';
+
 // Use the global API_BASE variable instead of declaring a new one
 console.log("🌐 Using API Base:", window.API_BASE);
 
