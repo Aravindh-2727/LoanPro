@@ -1,6 +1,4 @@
-
-
-// owner.js - UPDATED WITH BETTER ERROR HANDLING
+// owner.js - FIXED VERSION WITH CONSISTENT API_BASE USAGE
 console.log("📊 Owner Dashboard Loaded");
 
 // Use the global API_BASE variable with fallback
@@ -26,9 +24,9 @@ async function loadOwnerDashboard() {
   try {
     showLoading("customersContainer", "Loading customers...");
     
-    console.log("🔄 Loading customers from:", ${window.API_BASE}/api/customers);
+    console.log("🔄 Loading customers from:", `${window.API_BASE}/api/customers`);
     
-    const response = await fetch(${window.API_BASE}/api/customers, {
+    const response = await fetch(`${window.API_BASE}/api/customers`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -41,7 +39,7 @@ async function loadOwnerDashboard() {
     
     if (!response.ok) {
         // Try to get error message from response
-        let errorMessage = HTTP ${response.status};
+        let errorMessage = `HTTP ${response.status}`;
         try {
             const errorData = await response.text();
             console.error("❌ Error response:", errorData);
@@ -53,7 +51,7 @@ async function loadOwnerDashboard() {
         } catch (e) {
             // Ignore if we can't parse error response
         }
-        throw new Error(Failed to fetch customers: ${errorMessage});
+        throw new Error(`Failed to fetch customers: ${errorMessage}`);
     }
     
     const customers = await response.json();
@@ -65,33 +63,15 @@ async function loadOwnerDashboard() {
     // 📊 Update Analytics
     updateAnalytics(allCustomers);
     
-    // 🎛 Setup filters and render initial list
+    // 🎛️ Setup filters and render initial list
     setupFilters();
     applyFilters();
     
   } catch (err) {
     console.error("❌ Error loading owner dashboard:", err);
-    showError("customersContainer", Failed to load customers: ${err.message});
+    showError("customersContainer", `Failed to load customers: ${err.message}`);
   }
 }
-
-// ... REST OF YOUR owner.js CODE REMAINS THE SAME, JUST REPLACE ALL API_BASE WITH window.API_BASE ...
-
-// In ALL fetch calls, replace API_BASE with window.API_BASE
-// For example, in editCustomer function:
-async function editCustomer(customerId) {
-  try {
-    const res = await fetch(${window.API_BASE}/api/customers/${customerId});
-    // ... rest of the function
-  } catch (err) {
-    console.error("❌ Error loading customer for edit:", err);
-    alert("Failed to load customer details for editing.");
-  }
-}
-
-// Similarly update ALL other fetch calls in the file
-// Update addPayment, deletePayment, updateCustomer, deleteCustomer, etc.
-// ... REST OF YOUR owner.js CODE REMAINS THE SAME, JUST REPLACE ALL API_BASE WITH window.API_BASE ...
 
 // ✅ Filter and Sort Functionality
 function setupFilters() {
@@ -192,7 +172,7 @@ function sortCustomers(customers, sortBy) {
 function updateCustomerCount(count) {
     const customerCountElem = document.getElementById('customerCount');
     if (customerCountElem) {
-        customerCountElem.textContent = ${count} customer${count !== 1 ? 's' : ''};
+        customerCountElem.textContent = `${count} customer${count !== 1 ? 's' : ''}`;
     }
 }
 
@@ -342,6 +322,9 @@ function renderCustomerRowFullWidth(customer) {
   const isPending = customer.calculatedStatus === 'pending';
   const daysStatus = calculateDaysStatus(customer);
   
+  // Calculate daily payment if it's 0 or undefined (fallback)
+  const dailyPayment = customer.dailyPayment || Math.round(customer.totalLoanAmount * 0.01);
+  
   // Determine if delete button should be shown (only for deactivated customers)
   const showDeleteButton = isDeactivated;
   
@@ -368,7 +351,7 @@ function renderCustomerRowFullWidth(customer) {
       </td>
       <td class="loan-amount-cell-full" style="padding: 15px;">
         <div class="loan-amount" style="font-weight: bold; font-size: 16px; color: #2c3e50; margin-bottom: 5px;">₹${customer.totalLoanAmount.toLocaleString()}</div>
-        <div class="daily-payment" style="color: #666; font-size: 14px;">Daily: ₹${customer.dailyPayment}</div>
+        <div class="daily-payment" style="color: #666; font-size: 14px;">Daily: ₹${dailyPayment}</div>
         ${isDeactivated ? '<div class="fully-paid-badge" style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-top: 5px; display: inline-block;">Fully Paid</div>' : ''}
       </td>
       <td class="payment-info-full" style="padding: 15px;">
@@ -399,8 +382,8 @@ function renderCustomerRowFullWidth(customer) {
         ${daysStatus.status === 'completed' ? 
           '<span class="days-completed" style="color: #27ae60; font-weight: bold;"><i class="fas fa-trophy"></i> Completed</span>' :
           daysStatus.status === 'overdue' ? 
-          <span class="days-overdue" style="color: #e74c3c; font-weight: bold;"><i class="fas fa-exclamation-triangle"></i> Overdue: ${daysStatus.days} days</span> :
-          <span class="days-remaining" style="color: #3498db; font-weight: bold;"><i class="fas fa-clock"></i> ${daysStatus.days} days left</span>
+          `<span class="days-overdue" style="color: #e74c3c; font-weight: bold;"><i class="fas fa-exclamation-triangle"></i> Overdue: ${daysStatus.days} days</span>` :
+          `<span class="days-remaining" style="color: #3498db; font-weight: bold;"><i class="fas fa-clock"></i> ${daysStatus.days} days left</span>`
         }
       </td>
       <td class="actions-cell-full" style="padding: 15px;">
@@ -443,7 +426,6 @@ function calculateDaysStatus(customer) {
     return { status: 'active', days: daysLeft };
   }
 }
-
 
 // ✅ Enhanced Search Box Functionality with Filters
 if (searchInput) {
@@ -505,7 +487,7 @@ if (searchInput) {
 // ✅ Edit Customer Function
 async function editCustomer(customerId) {
   try {
-    const res = await fetch(${API_BASE}/api/customers/${customerId});
+    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`);
     if (!res.ok) throw new Error("Failed to fetch customer details");
     
     const customer = await res.json();
@@ -542,7 +524,7 @@ async function editCustomer(customerId) {
         
         <div class="form-group" style="margin-bottom: 20px;">
           <label style="display: block; margin-bottom: 5px; font-weight: bold;">Daily Payment (₹):</label>
-          <input type="number" id="editCustDaily" value="${customer.dailyPayment}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+          <input type="number" id="editCustDaily" value="${customer.dailyPayment || Math.round(customer.totalLoanAmount * 0.01)}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
         </div>
 
         <div class="form-actions" style="display: flex; gap: 10px;">
@@ -600,7 +582,7 @@ async function updateCustomer(customerId) {
   };
 
   try {
-    const res = await fetch(${API_BASE}/api/customers/${customerId}, {
+    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`, {
       method: "PUT",
       headers: { 
         "Content-Type": "application/json",
@@ -679,7 +661,7 @@ document.getElementById("saveCustomerBtn")?.addEventListener("click", async () =
   };
 
   try {
-    const res = await fetch(${API_BASE}/api/owner/add-customer, {
+    const res = await fetch(`${window.API_BASE}/api/owner/add-customer`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -735,7 +717,7 @@ async function viewCustomerDetails(customerId) {
     console.log("👀 Loading customer details:", customerId);
     currentCustomerId = customerId;
     
-    const res = await fetch(${API_BASE}/api/customers/${customerId});
+    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`);
     if (!res.ok) throw new Error("Failed to fetch customer details");
     
     const customer = await res.json();
@@ -763,6 +745,7 @@ async function viewCustomerDetails(customerId) {
     // Update payment and status information
     document.getElementById("custPaid").textContent = totalPaid.toLocaleString();
     document.getElementById("custRemaining").textContent = remainingAmount.toLocaleString();
+    document.getElementById("custDailyPayment").textContent = `₹${customer.dailyPayment || Math.round(customer.totalLoanAmount * 0.01)}`;
     
     // Update status with badges
     const statusElement = document.getElementById("custStatus");
@@ -781,9 +764,9 @@ async function viewCustomerDetails(customerId) {
     if (daysStatus.status === 'completed') {
       daysStatusElement.innerHTML = '<span class="status-deactivated"><i class="fas fa-trophy"></i> Loan Completed</span>';
     } else if (daysStatus.status === 'overdue') {
-      daysStatusElement.innerHTML = <span class="status-pending"><i class="fas fa-exclamation-circle"></i> Overdue: ${daysStatus.days} days</span>;
+      daysStatusElement.innerHTML = `<span class="status-pending"><i class="fas fa-exclamation-circle"></i> Overdue: ${daysStatus.days} days</span>`;
     } else {
-      daysStatusElement.innerHTML = <span class="status-active"><i class="fas fa-clock"></i> ${daysStatus.days} days remaining</span>;
+      daysStatusElement.innerHTML = `<span class="status-active"><i class="fas fa-clock"></i> ${daysStatus.days} days remaining</span>`;
     }
     
     // Show/hide completion banner
@@ -822,9 +805,9 @@ async function viewCustomerDetails(customerId) {
       progressSection.style.display = 'none';
     } else {
       progressSection.style.display = 'block';
-      progressFill.style.width = ${paymentProgress}%;
-      progressPercent.textContent = ${paymentProgress.toFixed(1)}% Paid;
-      progressAmount.textContent = (₹${totalPaid.toLocaleString()} of ₹${customer.totalLoanAmount.toLocaleString()});
+      progressFill.style.width = `${paymentProgress}%`;
+      progressPercent.textContent = `${paymentProgress.toFixed(1)}% Paid`;
+      progressAmount.textContent = `(₹${totalPaid.toLocaleString()} of ₹${customer.totalLoanAmount.toLocaleString()})`;
     }
     
     // Update action buttons
@@ -934,7 +917,7 @@ function renderPaymentHistoryNew(payments, totalPaid) {
 async function addPayment() {
   try {
     // Check if loan is deactivated
-    const customerRes = await fetch(${API_BASE}/api/customers/${currentCustomerId});
+    const customerRes = await fetch(`${window.API_BASE}/api/customers/${currentCustomerId}`);
     const customer = await customerRes.json();
     const customerWithStatus = calculateCustomerStatus(customer);
     
@@ -946,7 +929,7 @@ async function addPayment() {
     const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
     const remainingAmount = Math.max(0, customer.totalLoanAmount - totalPaid);
     
-    const amount = parseFloat(prompt(Enter payment amount (Remaining: ₹${remainingAmount}):));
+    const amount = parseFloat(prompt(`Enter payment amount (Remaining: ₹${remainingAmount}):`));
     
     if (!amount || amount <= 0) {
       alert("Please enter a valid payment amount");
@@ -955,7 +938,7 @@ async function addPayment() {
     
     // Prevent overpayment
     if (amount > remainingAmount) {
-      alert(Payment amount (₹${amount}) exceeds remaining amount (₹${remainingAmount}). Please enter a smaller amount.);
+      alert(`Payment amount (₹${amount}) exceeds remaining amount (₹${remainingAmount}). Please enter a smaller amount.`);
       return;
     }
     
@@ -969,7 +952,7 @@ async function addPayment() {
       principal: principal
     };
     
-    const res = await fetch(${API_BASE}/api/customers/${currentCustomerId}/payments, {
+    const res = await fetch(`${window.API_BASE}/api/customers/${currentCustomerId}/payments`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -994,12 +977,12 @@ async function addPayment() {
 
 // ✅ Delete Payment
 async function deletePayment(customerId, paymentDate) {
-  if (!confirm(Are you sure you want to delete payment from ${paymentDate}?)) {
+  if (!confirm(`Are you sure you want to delete payment from ${paymentDate}?`)) {
     return;
   }
   
   try {
-    const res = await fetch(${API_BASE}/api/customers/${customerId}/payments/${encodeURIComponent(paymentDate)}, {
+    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}/payments/${encodeURIComponent(paymentDate)}`, {
       method: "DELETE",
     });
     
@@ -1019,7 +1002,7 @@ async function deletePayment(customerId, paymentDate) {
 async function deleteCustomer(customerId, customerName) {
   // Get customer details to check status
   try {
-    const res = await fetch(${API_BASE}/api/customers/${customerId});
+    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`);
     if (!res.ok) throw new Error("Failed to fetch customer details");
     
     const customer = await res.json();
@@ -1027,17 +1010,17 @@ async function deleteCustomer(customerId, customerName) {
     
     // Only allow deletion for deactivated customers
     if (customerWithStatus.calculatedStatus !== 'deactivated') {
-      alert(❌ Cannot delete customer "${customerName}". Only completed/deactivated loans can be removed.);
+      alert(`❌ Cannot delete customer "${customerName}". Only completed/deactivated loans can be removed.`);
       return;
     }
     
-    if (!confirm(Are you sure you want to permanently delete customer "${customerName}"? This action cannot be undone.)) {
+    if (!confirm(`Are you sure you want to permanently delete customer "${customerName}"? This action cannot be undone.`)) {
       return;
     }
     
     showLoading("customersContainer", "Deleting customer...");
     
-    const deleteRes = await fetch(${API_BASE}/api/customers/${customerId}, {
+    const deleteRes = await fetch(`${window.API_BASE}/api/customers/${customerId}`, {
       method: "DELETE",
     });
     
@@ -1069,6 +1052,7 @@ window.addEventListener("DOMContentLoaded", () => {
   console.log("🌐 Final API Base:", window.API_BASE);
   loadOwnerDashboard();
 });
+
 // Logout functionality
 document.getElementById("ownerLogoutBtn")?.addEventListener("click", () => {
   window.location.href = "index.html";
