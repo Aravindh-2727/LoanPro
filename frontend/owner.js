@@ -1,8 +1,6 @@
 // owner.js - UPDATED TO USE GLOBAL API_BASE
 console.log("📊 Owner Dashboard Loaded");
 
-const API_BASE_URL = window.location.origin + '/api';
-
 // Use the global API_BASE variable instead of declaring a new one
 console.log("🌐 Using API Base:", window.API_BASE);
 
@@ -23,7 +21,7 @@ async function loadOwnerDashboard() {
   try {
     showLoading("customersContainer", "Loading customers...");
     
-    console.log("🔄 Loading customers...");
+    console.log("🔄 Loading customers from:", `${window.API_BASE}/api/customers`);
     const res = await fetch(`${window.API_BASE}/api/customers`);
     
     if (!res.ok) {
@@ -49,6 +47,22 @@ async function loadOwnerDashboard() {
   }
 }
 
+// ... REST OF YOUR owner.js CODE REMAINS THE SAME, JUST REPLACE ALL API_BASE WITH window.API_BASE ...
+
+// In ALL fetch calls, replace API_BASE with window.API_BASE
+// For example, in editCustomer function:
+async function editCustomer(customerId) {
+  try {
+    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`);
+    // ... rest of the function
+  } catch (err) {
+    console.error("❌ Error loading customer for edit:", err);
+    alert("Failed to load customer details for editing.");
+  }
+}
+
+// Similarly update ALL other fetch calls in the file
+// Update addPayment, deletePayment, updateCustomer, deleteCustomer, etc.
 // ... REST OF YOUR owner.js CODE REMAINS THE SAME, JUST REPLACE ALL API_BASE WITH window.API_BASE ...
 
 // ✅ Filter and Sort Functionality
