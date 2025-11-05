@@ -1,16 +1,16 @@
-// owner.js - CORRECTED VERSION WITH SINGLE loadOwnerDashboard FUNCTION
+// owner.js - FIXED VERSION WITH PROPER FUNCTION ORDER
 console.log("📊 Owner Dashboard Loaded");
 
 // Use the global API_BASE variable with fallback
 const API_BASE = window.API_BASE || "https://loanpro-backend-t41k.onrender.com";
-window.API_BASE = API_BASE; // Ensure it's set
+window.API_BASE = API_BASE;
 
 console.log("🌐 Using API Base:", window.API_BASE);
 
 let allCustomers = [];
 let currentCustomerId = null;
 
-// 🧭 DOM Elements
+// DOM Elements
 const customersContainer = document.getElementById("customersContainer");
 const searchInput = document.getElementById("searchCustomer");
 const addCustomerBtn = document.getElementById("addCustomerBtn");
@@ -21,7 +21,6 @@ const backToListBtn = document.getElementById("backToListBtn");
 
 // ==================== UTILITY FUNCTIONS ====================
 
-// ✅ Show Loading Animation
 function showLoading(containerId, message = "Loading...") {
   const container = document.getElementById(containerId);
   if (container) {
@@ -34,7 +33,6 @@ function showLoading(containerId, message = "Loading...") {
   }
 }
 
-// ✅ Show Error Message
 function showError(containerId, message) {
   const container = document.getElementById(containerId);
   if (container) {
@@ -48,30 +46,24 @@ function showError(containerId, message) {
   }
 }
 
-// ✅ Calculate Customer Status (Active, Pending, or Deactivated)
 function calculateCustomerStatus(customer) {
   const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
   
-  // If fully paid, status is deactivated
   if (totalPaid >= customer.totalLoanAmount) {
     return { ...customer, calculatedStatus: 'deactivated' };
   }
   
-  // Calculate days since loan start
   const loanStartDate = new Date(customer.loanStartDate);
   const today = new Date();
   const daysSinceStart = Math.floor((today - loanStartDate) / (1000 * 60 * 60 * 24));
   
-  // If more than 100 days and not fully paid, status is pending
   if (daysSinceStart > 100) {
     return { ...customer, calculatedStatus: 'pending' };
   }
   
-  // Otherwise, status is active
   return { ...customer, calculatedStatus: 'active' };
 }
 
-// ✅ Calculate Days Status
 function calculateDaysStatus(customer) {
   const loanStartDate = new Date(customer.loanStartDate);
   const today = new Date();
@@ -89,7 +81,6 @@ function calculateDaysStatus(customer) {
 
 // ==================== ANALYTICS FUNCTIONS ====================
 
-// ✅ Update Analytics
 function updateAnalytics(customers) {
   const totalCustomersElem = document.getElementById("analyticsTotalCustomers");
   const activeLoansElem = document.getElementById("analyticsActiveLoans");
@@ -109,7 +100,6 @@ function updateAnalytics(customers) {
     const customerPaid = c.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
     amountReceived += customerPaid;
     
-    // Calculate amount received only from active loans
     if (c.calculatedStatus === 'active') {
       activeLoansReceived += customerPaid;
     }
@@ -122,14 +112,12 @@ function updateAnalytics(customers) {
 
 // ==================== FILTER AND SORT FUNCTIONS ====================
 
-// ✅ Setup Filters
 function setupFilters() {
     const filterStatus = document.getElementById('filterStatus');
     const filterAmount = document.getElementById('filterAmount');
     const filterDate = document.getElementById('filterDate');
     const sortBy = document.getElementById('sortBy');
     
-    // Add event listeners to all filters
     [filterStatus, filterAmount, filterDate, sortBy].forEach(filter => {
         if (filter) {
             filter.addEventListener('change', applyFilters);
@@ -137,7 +125,6 @@ function setupFilters() {
     });
 }
 
-// ✅ Apply All Filters
 function applyFilters() {
     const statusFilter = document.getElementById('filterStatus')?.value || 'all';
     const amountFilter = document.getElementById('filterAmount')?.value || 'all';
@@ -146,14 +133,12 @@ function applyFilters() {
     
     let filteredCustomers = [...allCustomers];
     
-    // Apply status filter
     if (statusFilter !== 'all') {
         filteredCustomers = filteredCustomers.filter(customer => 
             customer.calculatedStatus === statusFilter
         );
     }
     
-    // Apply amount filter
     if (amountFilter !== 'all') {
         filteredCustomers = filteredCustomers.filter(customer => {
             const amount = customer.totalLoanAmount;
@@ -166,7 +151,6 @@ function applyFilters() {
         });
     }
     
-    // Apply date filter
     if (dateFilter !== 'all') {
         const today = new Date();
         filteredCustomers = filteredCustomers.filter(customer => {
@@ -181,17 +165,11 @@ function applyFilters() {
         });
     }
     
-    // Apply sorting
     filteredCustomers = sortCustomers(filteredCustomers, sortBy);
-    
-    // Update customer count
     updateCustomerCount(filteredCustomers.length);
-    
-    // Render filtered list
     renderCustomerList(filteredCustomers);
 }
 
-// ✅ Sort Customers
 function sortCustomers(customers, sortBy) {
     return [...customers].sort((a, b) => {
         switch (sortBy) {
@@ -217,7 +195,6 @@ function sortCustomers(customers, sortBy) {
     });
 }
 
-// ✅ Update Customer Count
 function updateCustomerCount(count) {
     const customerCountElem = document.getElementById('customerCount');
     if (customerCountElem) {
@@ -225,20 +202,17 @@ function updateCustomerCount(count) {
     }
 }
 
-// ✅ Clear All Filters
 function clearAllFilters() {
     document.getElementById('filterStatus').value = 'all';
     document.getElementById('filterAmount').value = 'all';
     document.getElementById('filterDate').value = 'all';
     document.getElementById('sortBy').value = 'name';
     document.getElementById('searchCustomer').value = '';
-    
     applyFilters();
 }
 
 // ==================== CUSTOMER LIST RENDERING ====================
 
-// ✅ Render Customer List as Full Width Table
 function renderCustomerList(customers) {
   if (!customersContainer) {
     console.error("❌ customersContainer not found");
@@ -284,18 +258,13 @@ function renderCustomerList(customers) {
   `;
 }
 
-// ✅ Render Customer Row for Full Width
 function renderCustomerRowFullWidth(customer) {
   const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
   const remainingAmount = Math.max(0, customer.totalLoanAmount - totalPaid);
   const isDeactivated = customer.calculatedStatus === 'deactivated';
   const isPending = customer.calculatedStatus === 'pending';
   const daysStatus = calculateDaysStatus(customer);
-  
-  // Calculate daily payment if it's 0 or undefined (fallback)
   const dailyPayment = customer.dailyPayment || Math.round(customer.totalLoanAmount * 0.01);
-  
-  // Determine if delete button should be shown (only for deactivated customers)
   const showDeleteButton = isDeactivated;
   
   return `
@@ -383,7 +352,6 @@ function renderCustomerRowFullWidth(customer) {
 
 // ==================== CUSTOMER DETAILS FUNCTIONS ====================
 
-// ✅ View Customer Details
 async function viewCustomerDetails(customerId) {
   try {
     console.log("👀 Loading customer details:", customerId);
@@ -395,7 +363,6 @@ async function viewCustomerDetails(customerId) {
     const customer = await res.json();
     const customerWithStatus = calculateCustomerStatus(customer);
     
-    // Calculate payment totals
     const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
     const remainingAmount = Math.max(0, customer.totalLoanAmount - totalPaid);
     const paymentProgress = (totalPaid / customer.totalLoanAmount) * 100;
@@ -403,7 +370,7 @@ async function viewCustomerDetails(customerId) {
     const isDeactivated = customerWithStatus.calculatedStatus === 'deactivated';
     const isPending = customerWithStatus.calculatedStatus === 'pending';
     
-    // Show customer detail view
+    // Show customer detail view immediately without loading animation
     if (customerDetailView) customerDetailView.classList.remove("hidden");
     if (customerListSection) customerListSection.classList.add("hidden");
     
@@ -413,13 +380,11 @@ async function viewCustomerDetails(customerId) {
     document.getElementById("custAddress").textContent = customer.address;
     document.getElementById("custStart").textContent = customer.loanStartDate;
     document.getElementById("custDue").textContent = customer.totalLoanAmount.toLocaleString();
-    
-    // Update payment and status information
     document.getElementById("custPaid").textContent = totalPaid.toLocaleString();
     document.getElementById("custRemaining").textContent = remainingAmount.toLocaleString();
     document.getElementById("custDailyPayment").textContent = `₹${customer.dailyPayment || Math.round(customer.totalLoanAmount * 0.01)}`;
     
-    // Update status with badges
+    // Update status
     const statusElement = document.getElementById("custStatus");
     statusElement.innerHTML = `
       <span class="status-${customerWithStatus.calculatedStatus}">
@@ -441,29 +406,25 @@ async function viewCustomerDetails(customerId) {
       daysStatusElement.innerHTML = `<span class="status-active"><i class="fas fa-clock"></i> ${daysStatus.days} days remaining</span>`;
     }
     
-    // Show/hide completion banner
+    // Show/hide banners
     const completionBanner = document.getElementById("completionBanner");
+    const pendingWarning = document.getElementById("pendingWarning");
+    
     if (completionBanner) {
+      completionBanner.classList.toggle("hidden", !isDeactivated);
       if (isDeactivated) {
-        completionBanner.classList.remove("hidden");
         const latestPayment = customer.payments?.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
         const completionDateElem = document.getElementById("completionDate");
         if (completionDateElem) {
           completionDateElem.textContent = latestPayment ? latestPayment.date : new Date().toISOString().split('T')[0];
         }
-      } else {
-        completionBanner.classList.add("hidden");
       }
     }
     
-    // Show pending warning if overdue
-    const pendingWarning = document.getElementById("pendingWarning");
     if (pendingWarning) {
+      pendingWarning.classList.toggle("hidden", !isPending);
       if (isPending) {
-        pendingWarning.classList.remove("hidden");
         document.getElementById("overdueDays").textContent = daysStatus.days;
-      } else {
-        pendingWarning.classList.add("hidden");
       }
     }
     
@@ -484,32 +445,8 @@ async function viewCustomerDetails(customerId) {
     
     // Update action buttons
     let actionButtons = document.getElementById("customerActionButtons");
-    if (!actionButtons) {
-      const customerDetailsSection = document.querySelector(".customer-details-section");
-      if (customerDetailsSection) {
-        const actionButtonsHTML = `
-          <div style="margin-top: 25px; display: flex; gap: 15px; flex-wrap: wrap;" id="customerActionButtons">
-            <button class="btn btn-warning" onclick="editCustomer('${customerId}')" style="padding: 10px 15px;">
-              <i class="fas fa-edit"></i> Edit Customer Details
-            </button>
-            <button class="btn btn-success" onclick="addPayment()" style="padding: 10px 15px;">
-              <i class="fas fa-plus"></i> Add Payment
-            </button>
-            ${isDeactivated ? `
-              <button class="btn btn-danger delete-customer-btn" onclick="deleteCustomer('${customerId}', '${customer.name}')" style="padding: 10px 15px;">
-                <i class="fas fa-trash"></i> Delete Customer Record
-              </button>
-            ` : `
-              <button class="btn btn-outline-danger" disabled title="Delete option available only after loan completion" style="padding: 10px 15px;">
-                <i class="fas fa-trash"></i> Delete Customer Record
-              </button>
-            `}
-          </div>
-        `;
-        customerDetailsSection.insertAdjacentHTML('beforeend', actionButtonsHTML);
-      }
-    } else {
-      actionButtons.innerHTML = `
+    const actionButtonsHTML = `
+      <div style="margin-top: 25px; display: flex; gap: 15px; flex-wrap: wrap;" id="customerActionButtons">
         <button class="btn btn-warning" onclick="editCustomer('${customerId}')" style="padding: 10px 15px;">
           <i class="fas fa-edit"></i> Edit Customer Details
         </button>
@@ -525,10 +462,19 @@ async function viewCustomerDetails(customerId) {
             <i class="fas fa-trash"></i> Delete Customer Record
           </button>
         `}
-      `;
+      </div>
+    `;
+    
+    if (!actionButtons) {
+      const customerDetailsSection = document.querySelector(".customer-details-section");
+      if (customerDetailsSection) {
+        customerDetailsSection.insertAdjacentHTML('beforeend', actionButtonsHTML);
+      }
+    } else {
+      actionButtons.innerHTML = actionButtonsHTML;
     }
     
-    // Render payment history in the new container
+    // Render payment history
     renderPaymentHistoryNew(customer.payments, totalPaid);
     
   } catch (err) {
@@ -537,7 +483,6 @@ async function viewCustomerDetails(customerId) {
   }
 }
 
-// ✅ New Payment History Renderer for Single Column Layout
 function renderPaymentHistoryNew(payments, totalPaid) {
   const container = document.getElementById("paymentHistoryContainer");
   
@@ -585,269 +530,8 @@ function renderPaymentHistoryNew(payments, totalPaid) {
   `;
 }
 
-// ==================== CUSTOMER MANAGEMENT FUNCTIONS ====================
-
-// ✅ Edit Customer Function
-async function editCustomer(customerId) {
-  try {
-    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`);
-    if (!res.ok) throw new Error("Failed to fetch customer details");
-    
-    const customer = await res.json();
-    
-    // Create edit form
-    const editFormHTML = `
-      <div class="form-popup" id="editCustomerForm" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1001; width: 90%; max-width: 500px;">
-        <h3 style="margin-bottom: 20px; color: #2c3e50;"><i class="fas fa-edit"></i> Edit Customer</h3>
-        
-        <div class="form-group" style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Name:</label>
-          <input type="text" id="editCustName" value="${customer.name}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        
-        <div class="form-group" style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Phone:</label>
-          <input type="text" id="editCustPhone" value="${customer.phone}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        
-        <div class="form-group" style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Address:</label>
-          <textarea id="editCustAddress" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; height: 80px;">${customer.address}</textarea>
-        </div>
-        
-        <div class="form-group" style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Loan Start Date:</label>
-          <input type="date" id="editCustStart" value="${customer.loanStartDate}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        
-        <div class="form-group" style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Total Loan Amount (₹):</label>
-          <input type="number" id="editCustDue" value="${customer.totalLoanAmount}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        
-        <div class="form-group" style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Daily Payment (₹):</label>
-          <input type="number" id="editCustDaily" value="${customer.dailyPayment || Math.round(customer.totalLoanAmount * 0.01)}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-
-        <div class="form-actions" style="display: flex; gap: 10px;">
-          <button id="updateCustomerBtn" class="btn btn-success" style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; flex: 1;">
-            <i class="fas fa-check"></i> Update
-          </button>
-          <button id="cancelEditBtn" class="btn btn-danger" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; flex: 1;">
-            <i class="fas fa-times"></i> Cancel
-          </button>
-        </div>
-      </div>
-      <div class="overlay" id="editOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;"></div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', editFormHTML);
-    
-    // Add event listeners
-    document.getElementById('updateCustomerBtn').addEventListener('click', () => updateCustomer(customerId));
-    document.getElementById('cancelEditBtn').addEventListener('click', closeEditForm);
-    document.getElementById('editOverlay').addEventListener('click', closeEditForm);
-    
-  } catch (err) {
-    console.error("❌ Error loading customer for edit:", err);
-    alert("Failed to load customer details for editing.");
-  }
-}
-
-// ✅ Update Customer
-async function updateCustomer(customerId) {
-  const name = document.getElementById("editCustName").value.trim();
-  const phone = document.getElementById("editCustPhone").value.trim();
-  const address = document.getElementById("editCustAddress").value.trim();
-  const loanStartDate = document.getElementById("editCustStart").value;
-  const totalLoanAmount = parseFloat(document.getElementById("editCustDue").value) || 0;
-  const dailyPayment = parseFloat(document.getElementById("editCustDaily").value) || 0;
-
-  // Validation
-  if (!name || !phone) {
-    alert("Name and phone are required!");
-    return;
-  }
-
-  if (phone.length < 10) {
-    alert("Please enter a valid phone number (at least 10 digits)");
-    return;
-  }
-
-  const updatedCustomer = {
-    name: name,
-    phone: phone,
-    address: address,
-    loanStartDate: loanStartDate,
-    totalLoanAmount: totalLoanAmount,
-    dailyPayment: dailyPayment
-  };
-
-  try {
-    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`, {
-      method: "PUT",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify(updatedCustomer),
-    });
-
-    if (res.ok) {
-      alert("✅ Customer updated successfully!");
-      closeEditForm();
-      loadOwnerDashboard();
-    } else {
-      const errorData = await res.json();
-      alert("❌ Failed to update customer: " + (errorData.message || "Unknown error"));
-    }
-  } catch (err) {
-    console.error("❌ Error updating customer:", err);
-    alert("❌ Failed to update customer. Check console for details.");
-  }
-}
-
-// ✅ Close Edit Form
-function closeEditForm() {
-  const editForm = document.getElementById('editCustomerForm');
-  const overlay = document.getElementById('editOverlay');
-  
-  if (editForm) editForm.remove();
-  if (overlay) overlay.remove();
-}
-
-// ==================== PAYMENT MANAGEMENT FUNCTIONS ====================
-
-// ✅ Add Payment - ENHANCED (prevents overpayment)
-async function addPayment() {
-  try {
-    // Check if loan is deactivated
-    const customerRes = await fetch(`${window.API_BASE}/api/customers/${currentCustomerId}`);
-    const customer = await customerRes.json();
-    const customerWithStatus = calculateCustomerStatus(customer);
-    
-    if (customerWithStatus.calculatedStatus === 'deactivated') {
-      alert("This loan has already been deactivated. No further payments can be added.");
-      return;
-    }
-    
-    const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-    const remainingAmount = Math.max(0, customer.totalLoanAmount - totalPaid);
-    
-    const amount = parseFloat(prompt(`Enter payment amount (Remaining: ₹${remainingAmount}):`));
-    
-    if (!amount || amount <= 0) {
-      alert("Please enter a valid payment amount");
-      return;
-    }
-    
-    // Prevent overpayment
-    if (amount > remainingAmount) {
-      alert(`Payment amount (₹${amount}) exceeds remaining amount (₹${remainingAmount}). Please enter a smaller amount.`);
-      return;
-    }
-    
-    // Simple payment without interest calculation
-    const principal = amount;
-    const today = new Date().toISOString().split('T')[0];
-    
-    const paymentData = {
-      date: today,
-      amount: amount,
-      principal: principal
-    };
-    
-    const res = await fetch(`${window.API_BASE}/api/customers/${currentCustomerId}/payments`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify(paymentData),
-    });
-    
-    if (res.ok) {
-      alert("✅ Payment added successfully!");
-      // Reload customer details to show updated payment history and status
-      viewCustomerDetails(currentCustomerId);
-    } else {
-      const errorData = await res.json();
-      alert("❌ Failed to add payment: " + (errorData.message || "Unknown error"));
-    }
-  } catch (err) {
-    console.error("❌ Error adding payment:", err);
-    alert("❌ Failed to add payment. Check console for details.");
-  }
-}
-
-// ✅ Delete Payment
-async function deletePayment(customerId, paymentDate) {
-  if (!confirm(`Are you sure you want to delete payment from ${paymentDate}?`)) {
-    return;
-  }
-  
-  try {
-    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}/payments/${encodeURIComponent(paymentDate)}`, {
-      method: "DELETE",
-    });
-    
-    if (res.ok) {
-      alert("✅ Payment deleted successfully!");
-      viewCustomerDetails(currentCustomerId);
-    } else {
-      alert("❌ Failed to delete payment");
-    }
-  } catch (err) {
-    console.error("❌ Error deleting payment:", err);
-    alert("❌ Failed to delete payment.");
-  }
-}
-
-// ==================== CUSTOMER DELETION ====================
-
-// ✅ Delete Customer - ONLY ALLOWED FOR DEACTIVATED CUSTOMERS
-async function deleteCustomer(customerId, customerName) {
-  // Get customer details to check status
-  try {
-    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`);
-    if (!res.ok) throw new Error("Failed to fetch customer details");
-    
-    const customer = await res.json();
-    const customerWithStatus = calculateCustomerStatus(customer);
-    
-    // Only allow deletion for deactivated customers
-    if (customerWithStatus.calculatedStatus !== 'deactivated') {
-      alert(`❌ Cannot delete customer "${customerName}". Only completed/deactivated loans can be removed.`);
-      return;
-    }
-    
-    if (!confirm(`Are you sure you want to permanently delete customer "${customerName}"? This action cannot be undone.`)) {
-      return;
-    }
-    
-    showLoading("customersContainer", "Deleting customer...");
-    
-    const deleteRes = await fetch(`${window.API_BASE}/api/customers/${customerId}`, {
-      method: "DELETE",
-    });
-    
-    if (deleteRes.ok) {
-      alert("✅ Customer deleted successfully!");
-      loadOwnerDashboard();
-    } else {
-      throw new Error("Failed to delete customer");
-    }
-  } catch (err) {
-    console.error("❌ Error deleting customer:", err);
-    alert("❌ Failed to delete customer.");
-    loadOwnerDashboard(); // Reload to refresh the list
-  }
-}
-
 // ==================== MAIN DASHBOARD FUNCTION ====================
 
-// ✅ Load Dashboard + Customers with Loading Animation
 async function loadOwnerDashboard() {
   try {
     showLoading("customersContainer", "Loading customers...");
@@ -866,7 +550,6 @@ async function loadOwnerDashboard() {
     console.log("📡 Response ok:", response.ok);
     
     if (!response.ok) {
-        // Try to get error message from response
         let errorMessage = `HTTP ${response.status}`;
         try {
             const errorData = await response.text();
@@ -888,10 +571,10 @@ async function loadOwnerDashboard() {
     // Calculate pending status for each customer
     allCustomers = customers.map(customer => calculateCustomerStatus(customer));
 
-    // 📊 Update Analytics
+    // Update Analytics
     updateAnalytics(allCustomers);
     
-    // 🎛️ Setup filters and render initial list
+    // Setup filters and render initial list
     setupFilters();
     applyFilters();
     
@@ -901,174 +584,9 @@ async function loadOwnerDashboard() {
   }
 }
 
-// ==================== EVENT LISTENERS ====================
-
-// ✅ Enhanced Search Box Functionality with Filters
-if (searchInput) {
-  searchInput.addEventListener("input", (e) => {
-    const term = e.target.value.toLowerCase();
-    if (term === '') {
-      applyFilters(); // Show filtered results when search is cleared
-    } else {
-      // Search within currently filtered results
-      const statusFilter = document.getElementById('filterStatus')?.value || 'all';
-      const amountFilter = document.getElementById('filterAmount')?.value || 'all';
-      const dateFilter = document.getElementById('filterDate')?.value || 'all';
-      
-      let filtered = allCustomers.filter(c =>
-        c.name.toLowerCase().includes(term) || 
-        c.phone.includes(term) ||
-        c.address.toLowerCase().includes(term)
-      );
-      
-      // Apply current filters to search results
-      if (statusFilter !== 'all') {
-        filtered = filtered.filter(customer => 
-          customer.calculatedStatus === statusFilter
-        );
-      }
-      
-      if (amountFilter !== 'all') {
-        filtered = filtered.filter(customer => {
-          const amount = customer.totalLoanAmount;
-          switch (amountFilter) {
-            case 'high': return amount >= 50000;
-            case 'medium': return amount >= 25000 && amount < 50000;
-            case 'low': return amount < 25000;
-            default: return true;
-          }
-        });
-      }
-      
-      if (dateFilter !== 'all') {
-        const today = new Date();
-        filtered = filtered.filter(customer => {
-          const startDate = new Date(customer.loanStartDate);
-          const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-          
-          switch (dateFilter) {
-            case 'recent': return daysSinceStart <= 30;
-            case 'old': return daysSinceStart > 30;
-            default: return true;
-          }
-        });
-      }
-      
-      updateCustomerCount(filtered.length);
-      renderCustomerList(filtered);
-    }
-  });
-}
-
-// ✅ Add New Customer - Show Form
-if (addCustomerBtn) {
-  addCustomerBtn.addEventListener("click", () => {
-    console.log("➕ Add Customer button clicked");
-    addCustomerForm.classList.remove("hidden");
-    if (customerListSection) customerListSection.classList.add("hidden");
-    
-    // Set today's date as default for start date
-    const today = new Date().toISOString().split('T')[0];
-    const startDateInput = document.getElementById("newCustStart");
-    if (startDateInput) startDateInput.value = today;
-  });
-}
-
-// ✅ Save New Customer
-document.getElementById("saveCustomerBtn")?.addEventListener("click", async () => {
-  console.log("💾 Save Customer button clicked");
-  
-  const name = document.getElementById("newCustName").value.trim();
-  const phone = document.getElementById("newCustPhone").value.trim();
-  const address = document.getElementById("newCustAddress").value.trim();
-  const startDate = document.getElementById("newCustStart").value;
-  const totalLoanAmount = parseFloat(document.getElementById("newCustDue").value) || 0;
-
-  // Validation
-  if (!name || !phone) {
-    alert("Name and phone are required!");
-    return;
-  }
-
-  if (phone.length < 10) {
-    alert("Please enter a valid phone number (at least 10 digits)");
-    return;
-  }
-
-  const newCustomer = {
-    name: name,
-    phone: phone,
-    address: address,
-    loanStartDate: startDate,
-    totalLoanAmount: totalLoanAmount,
-    dailyPayment: Math.round(totalLoanAmount * 0.01) || 100,
-    payments: [],
-    status: "active"
-  };
-
-  try {
-    const res = await fetch(`${window.API_BASE}/api/owner/add-customer`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify(newCustomer),
-    });
-
-    const responseData = await res.json();
-    
-    if (res.ok) {
-      alert("✅ Customer added successfully!");
-      
-      // Hide form and show customer list
-      addCustomerForm.classList.add("hidden");
-      if (customerListSection) customerListSection.classList.remove("hidden");
-      
-      // Clear form
-      document.getElementById("newCustName").value = "";
-      document.getElementById("newCustPhone").value = "";
-      document.getElementById("newCustAddress").value = "";
-      document.getElementById("newCustStart").value = "";
-      document.getElementById("newCustDue").value = "";
-      
-      // Reload the customer list
-      loadOwnerDashboard();
-    } else {
-      alert("❌ Failed to add customer: " + (responseData.message || "Unknown error"));
-    }
-  } catch (err) {
-    console.error("❌ Error adding customer:", err);
-    alert("❌ Failed to add customer. Check console for details.");
-  }
-});
-
-// ✅ Cancel Add Customer
-document.getElementById("cancelAddBtn")?.addEventListener("click", () => {
-  console.log("❌ Cancel button clicked");
-  addCustomerForm.classList.add("hidden");
-  if (customerListSection) customerListSection.classList.remove("hidden");
-  
-  // Clear form
-  document.getElementById("newCustName").value = "";
-  document.getElementById("newCustPhone").value = "";
-  document.getElementById("newCustAddress").value = "";
-  document.getElementById("newCustStart").value = "";
-  document.getElementById("newCustDue").value = "";
-});
-
-// ✅ Back to List
-if (backToListBtn) {
-  backToListBtn.addEventListener("click", () => {
-    if (customerDetailView) customerDetailView.classList.add("hidden");
-    if (customerListSection) customerListSection.classList.remove("hidden");
-    currentCustomerId = null;
-  });
-}
-
 // ==================== INITIALIZATION ====================
 
-// 🚀 Initialize
+// Initialize when DOM is loaded
 window.addEventListener("DOMContentLoaded", () => {
   console.log("🏁 Owner Dashboard Initialized");
   console.log("🌐 Final API Base:", window.API_BASE);
