@@ -1,4 +1,4 @@
-// owner.js - COMPLETELY CORRECTED VERSION
+// owner.js - FIXED WITH FUNCTION DECLARATIONS
 console.log("📊 Owner Dashboard Loaded");
 
 // Use the global API_BASE variable with fallback
@@ -10,7 +10,7 @@ console.log("🌐 Using API Base:", window.API_BASE);
 let allCustomers = [];
 let currentCustomerId = null;
 
-// ==================== UTILITY FUNCTIONS ====================
+// ==================== FUNCTION DECLARATIONS (HOISTED) ====================
 
 function calculateCustomerStatus(customer) {
   const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
@@ -49,13 +49,10 @@ function showLoading(containerId, message = "Loading...") {
   const container = document.getElementById(containerId);
   if (container) {
     container.innerHTML = `
-      <div class="loading-container" style="text-align: center; padding: 40px; color: #666;">
-        <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+      <div class="loading-container">
+        <div class="spinner"></div>
         <p>${message}</p>
       </div>
-      <style>
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-      </style>
     `;
   }
 }
@@ -64,18 +61,14 @@ function showError(containerId, message) {
   const container = document.getElementById(containerId);
   if (container) {
     container.innerHTML = `
-      <div class="error-container" style="padding: 25px; background: #f8d7da; color: #721c24; border-radius: 8px; text-align: center; margin: 20px;">
-        <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i>
-        <p style="margin: 10px 0; font-weight: bold;">${message}</p>
-        <button class="btn btn-primary" onclick="loadOwnerDashboard()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
-          Retry
-        </button>
+      <div class="error-container">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>${message}</p>
+        <button class="btn btn-primary" onclick="loadOwnerDashboard()">Retry</button>
       </div>
     `;
   }
 }
-
-// ==================== ANALYTICS FUNCTIONS ====================
 
 function updateAnalytics(customers) {
   const totalCustomersElem = document.getElementById("analyticsTotalCustomers");
@@ -84,10 +77,12 @@ function updateAnalytics(customers) {
   const amountReceivedElem = document.getElementById("analyticsAmountReceived");
   const activeLoansReceivedElem = document.getElementById("analyticsActiveLoansReceived");
 
-  if (totalCustomersElem) totalCustomersElem.textContent = customers.length;
+  if (!totalCustomersElem || !activeLoansElem || !totalLoanAmountElem) return;
+
+  totalCustomersElem.textContent = customers.length;
 
   const activeLoans = customers.filter(c => c.calculatedStatus === 'active').length;
-  if (activeLoansElem) activeLoansElem.textContent = activeLoans;
+  activeLoansElem.textContent = activeLoans;
 
   let totalLoan = 0, amountReceived = 0, activeLoansReceived = 0;
   
@@ -101,20 +96,15 @@ function updateAnalytics(customers) {
     }
   });
 
-  if (totalLoanAmountElem) totalLoanAmountElem.textContent = "₹" + totalLoan.toLocaleString();
+  totalLoanAmountElem.textContent = "₹" + totalLoan.toLocaleString();
   if (amountReceivedElem) amountReceivedElem.textContent = "₹" + amountReceived.toLocaleString();
   if (activeLoansReceivedElem) activeLoansReceivedElem.textContent = "₹" + activeLoansReceived.toLocaleString();
 }
 
-// ==================== FILTER AND SORT FUNCTIONS ====================
-
 function setupFilters() {
-  const filterStatus = document.getElementById('filterStatus');
-  const filterAmount = document.getElementById('filterAmount');
-  const filterDate = document.getElementById('filterDate');
-  const sortBy = document.getElementById('sortBy');
-  
-  [filterStatus, filterAmount, filterDate, sortBy].forEach(filter => {
+  const filters = ['filterStatus', 'filterAmount', 'filterDate', 'sortBy'];
+  filters.forEach(filterId => {
+    const filter = document.getElementById(filterId);
     if (filter) {
       filter.addEventListener('change', applyFilters);
     }
@@ -129,12 +119,14 @@ function applyFilters() {
   
   let filteredCustomers = [...allCustomers];
   
+  // Status filter
   if (statusFilter !== 'all') {
     filteredCustomers = filteredCustomers.filter(customer => 
       customer.calculatedStatus === statusFilter
     );
   }
   
+  // Amount filter
   if (amountFilter !== 'all') {
     filteredCustomers = filteredCustomers.filter(customer => {
       const amount = customer.totalLoanAmount;
@@ -147,6 +139,7 @@ function applyFilters() {
     });
   }
   
+  // Date filter
   if (dateFilter !== 'all') {
     const today = new Date();
     filteredCustomers = filteredCustomers.filter(customer => {
@@ -161,6 +154,7 @@ function applyFilters() {
     });
   }
   
+  // Sort
   filteredCustomers = sortCustomers(filteredCustomers, sortBy);
   updateCustomerCount(filteredCustomers.length);
   renderCustomerList(filteredCustomers);
@@ -207,22 +201,20 @@ function clearAllFilters() {
   applyFilters();
 }
 
-// ==================== CUSTOMER LIST RENDERING ====================
-
 function renderCustomerList(customers) {
   const customersContainer = document.getElementById("customersContainer");
   if (!customersContainer) return;
   
   if (customers.length === 0) {
     customersContainer.innerHTML = `
-      <div class="empty-state-full" style="text-align: center; padding: 40px; color: #666;">
+      <div class="empty-state-full">
         <i class="fas fa-users fa-3x"></i>
         <h3>No customers found</h3>
         <p>Try adjusting your filters or add a new customer</p>
         <button class="btn btn-success" onclick="clearAllFilters(); document.getElementById('addCustomerBtn').click()">
           Add New Customer
         </button>
-        <button class="btn btn-secondary" onclick="clearAllFilters()" style="margin-left: 10px;">
+        <button class="btn btn-secondary" onclick="clearAllFilters()">
           Clear Filters
         </button>
       </div>
@@ -230,122 +222,106 @@ function renderCustomerList(customers) {
     return;
   }
 
-  customersContainer.innerHTML = `
-    <div class="customer-list-container-full" style="width: 100%; overflow-x: auto;">
-      <table class="customer-table-fullwidth" style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+  let tableHTML = `
+    <div class="customer-list-container-full">
+      <table class="customer-table-fullwidth">
         <thead>
-          <tr style="background: #2c3e50; color: white;">
-            <th style="padding: 15px; text-align: left; border-bottom: 2px solid #34495e;">Customer</th>
-            <th style="padding: 15px; text-align: left; border-bottom: 2px solid #34495e;">Contact</th>
-            <th style="padding: 15px; text-align: left; border-bottom: 2px solid #34495e;">Loan Amount</th>
-            <th style="padding: 15px; text-align: left; border-bottom: 2px solid #34495e;">Paid/Remaining</th>
-            <th style="padding: 15px; text-align: left; border-bottom: 2px solid #34495e;">Status</th>
-            <th style="padding: 15px; text-align: left; border-bottom: 2px solid #34495e;">Days Status</th>
-            <th style="padding: 15px; text-align: left; border-bottom: 2px solid #34495e;">Actions</th>
+          <tr>
+            <th>Customer</th>
+            <th>Contact</th>
+            <th>Loan Amount</th>
+            <th>Paid/Remaining</th>
+            <th>Status</th>
+            <th>Days Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          ${customers.map(customer => renderCustomerRow(customer)).join('')}
+  `;
+
+  customers.forEach(customer => {
+    const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+    const remainingAmount = Math.max(0, customer.totalLoanAmount - totalPaid);
+    const isDeactivated = customer.calculatedStatus === 'deactivated';
+    const daysStatus = calculateDaysStatus(customer);
+    const dailyPayment = customer.dailyPayment || Math.round(customer.totalLoanAmount / 100);
+    
+    tableHTML += `
+      <tr class="customer-row" onclick="viewCustomerDetails('${customer._id}')">
+        <td class="customer-info-cell-full">
+          <div class="customer-info-content">
+            <div class="customer-avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="customer-details-full">
+              <div class="customer-name">${customer.name}</div>
+              <div class="customer-address">${customer.address}</div>
+            </div>
+          </div>
+        </td>
+        <td class="contact-info-full">
+          <div class="phone-number">
+            <i class="fas fa-phone"></i> ${customer.phone}
+          </div>
+          <div class="start-date">
+            <i class="fas fa-calendar"></i> ${customer.loanStartDate}
+          </div>
+        </td>
+        <td class="loan-amount-cell-full">
+          <div class="loan-amount">₹${customer.totalLoanAmount.toLocaleString()}</div>
+          <div class="daily-payment">Daily: ₹${dailyPayment}</div>
+          ${isDeactivated ? '<div class="fully-paid-badge">Fully Paid</div>' : ''}
+        </td>
+        <td class="payment-info-full">
+          <div class="payment-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${Math.min(100, (totalPaid / customer.totalLoanAmount) * 100)}%"></div>
+            </div>
+            <div class="payment-stats">
+              <span class="paid">₹${totalPaid.toLocaleString()} paid</span>
+              <span class="remaining">₹${remainingAmount.toLocaleString()} left</span>
+            </div>
+          </div>
+        </td>
+        <td class="status-cell-full">
+          <span class="status-badge status-${customer.calculatedStatus}">
+            ${customer.calculatedStatus === 'deactivated' ? 'Completed' : 
+              customer.calculatedStatus === 'pending' ? 'Pending' : 'Active'}
+          </span>
+        </td>
+        <td class="days-status-cell-full">
+          ${daysStatus.status === 'completed' ? 
+            '<span class="days-completed"><i class="fas fa-trophy"></i> Completed</span>' :
+            daysStatus.status === 'overdue' ? 
+            `<span class="days-overdue"><i class="fas fa-exclamation-triangle"></i> Overdue: ${daysStatus.days} days</span>` :
+            `<span class="days-remaining"><i class="fas fa-clock"></i> ${daysStatus.days} days left</span>`
+          }
+        </td>
+        <td class="actions-cell-full">
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); viewCustomerDetails('${customer._id}')">View</button>
+          <button class="btn btn-warning btn-sm" onclick="event.stopPropagation(); editCustomer('${customer._id}')">Edit</button>
+          ${isDeactivated ? `
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteCustomer('${customer._id}', '${customer.name}')">Delete</button>
+          ` : `
+            <button class="btn btn-outline-danger btn-sm" disabled>Delete</button>
+          `}
+        </td>
+      </tr>
+    `;
+  });
+
+  tableHTML += `
         </tbody>
       </table>
     </div>
   `;
-}
 
-function renderCustomerRow(customer) {
-  const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-  const remainingAmount = Math.max(0, customer.totalLoanAmount - totalPaid);
-  const isDeactivated = customer.calculatedStatus === 'deactivated';
-  const daysStatus = calculateDaysStatus(customer);
-  const dailyPayment = customer.dailyPayment || Math.round(customer.totalLoanAmount / 100);
-  
-  return `
-    <tr class="customer-row" style="border-bottom: 1px solid #eee; transition: background-color 0.2s; cursor: pointer;" onclick="viewCustomerDetails('${customer._id}')">
-      <td style="padding: 15px;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 40px; height: 40px; border-radius: 50%; background: #3498db; display: flex; align-items: center; justify-content: center; color: white;">
-            <i class="fas fa-user"></i>
-          </div>
-          <div style="min-width: 0;">
-            <div style="font-weight: bold; font-size: 16px; color: #2c3e50; margin-bottom: 4px;">${customer.name}</div>
-            <div style="color: #666; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${customer.address}</div>
-          </div>
-        </div>
-      </td>
-      <td style="padding: 15px;">
-        <div style="margin-bottom: 5px;">
-          <i class="fas fa-phone" style="color: #27ae60; margin-right: 8px;"></i> ${customer.phone}
-        </div>
-        <div style="color: #666;">
-          <i class="fas fa-calendar" style="color: #e74c3c; margin-right: 8px;"></i> ${customer.loanStartDate}
-        </div>
-      </td>
-      <td style="padding: 15px;">
-        <div style="font-weight: bold; font-size: 16px; color: #2c3e50; margin-bottom: 5px;">₹${customer.totalLoanAmount.toLocaleString()}</div>
-        <div style="color: #666; font-size: 14px;">Daily: ₹${dailyPayment}</div>
-        ${isDeactivated ? '<div style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-top: 5px; display: inline-block;">Fully Paid</div>' : ''}
-      </td>
-      <td style="padding: 15px;">
-        <div>
-          <div style="height: 8px; background: #ecf0f1; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
-            <div style="height: 100%; background: #27ae60; width: ${Math.min(100, (totalPaid / customer.totalLoanAmount) * 100)}%"></div>
-          </div>
-          <div style="display: flex; justify-content: space-between; font-size: 14px;">
-            <span style="color: #27ae60; font-weight: bold;">₹${totalPaid.toLocaleString()} paid</span>
-            <span style="color: #e74c3c; font-weight: bold;">₹${remainingAmount.toLocaleString()} left</span>
-          </div>
-        </div>
-      </td>
-      <td style="padding: 15px;">
-        <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; 
-          background: ${customer.calculatedStatus === 'deactivated' ? '#27ae60' : 
-                      customer.calculatedStatus === 'pending' ? '#f39c12' : '#3498db'}; 
-          color: white;">
-          ${customer.calculatedStatus === 'deactivated' ? 'Completed' : 
-            customer.calculatedStatus === 'pending' ? 'Pending' : 'Active'}
-        </span>
-      </td>
-      <td style="padding: 15px;">
-        ${daysStatus.status === 'completed' ? 
-          '<span style="color: #27ae60; font-weight: bold;"><i class="fas fa-trophy"></i> Completed</span>' :
-          daysStatus.status === 'overdue' ? 
-          `<span style="color: #e74c3c; font-weight: bold;"><i class="fas fa-exclamation-triangle"></i> Overdue: ${daysStatus.days} days</span>` :
-          `<span style="color: #3498db; font-weight: bold;"><i class="fas fa-clock"></i> ${daysStatus.days} days left</span>`
-        }
-      </td>
-      <td style="padding: 15px;">
-        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); viewCustomerDetails('${customer._id}')" style="padding: 6px 12px; background: #3498db; color: white; border: none; border-radius: 4px; margin: 2px; cursor: pointer;">
-          View
-        </button>
-        <button class="btn btn-warning btn-sm" onclick="event.stopPropagation(); editCustomer('${customer._id}')" style="padding: 6px 12px; background: #f39c12; color: white; border: none; border-radius: 4px; margin: 2px; cursor: pointer;">
-          Edit
-        </button>
-        ${isDeactivated ? `
-          <button class="btn btn-danger btn-sm" 
-                  onclick="event.stopPropagation(); deleteCustomer('${customer._id}', '${customer.name}')"
-                  style="padding: 6px 12px; background: #e74c3c; color: white; border: none; border-radius: 4px; margin: 2px; cursor: pointer;">
-            Delete
-          </button>
-        ` : `
-          <button class="btn btn-outline-danger btn-sm" disabled
-                  style="padding: 6px 12px; background: #f8f9fa; color: #6c757d; border: 1px solid #6c757d; border-radius: 4px; margin: 2px; cursor: not-allowed;">
-            Delete
-          </button>
-        `}
-      </td>
-    </tr>
-  `;
+  customersContainer.innerHTML = tableHTML;
 }
-
-// ==================== CUSTOMER DETAILS FUNCTIONS ====================
 
 async function viewCustomerDetails(customerId) {
   try {
-    console.log("Loading customer details:", customerId);
     currentCustomerId = customerId;
-    
-    const customerDetailView = document.getElementById("customerDetailView");
-    const customerListSection = document.getElementById("customerList");
     
     const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`);
     if (!res.ok) throw new Error("Failed to fetch customer details");
@@ -359,11 +335,12 @@ async function viewCustomerDetails(customerId) {
     const daysStatus = calculateDaysStatus(customerWithStatus);
     const isDeactivated = customerWithStatus.calculatedStatus === 'deactivated';
     const isPending = customerWithStatus.calculatedStatus === 'pending';
-    const dailyPayment = customer.dailyPayment || Math.round(customer.totalLoanAmount / 100);
     
-    if (customerDetailView) customerDetailView.classList.remove("hidden");
-    if (customerListSection) customerListSection.classList.add("hidden");
+    // Show detail view, hide list
+    document.getElementById("customerDetailView").classList.remove("hidden");
+    document.getElementById("customerList").classList.add("hidden");
     
+    // Update customer info
     document.getElementById("custName").textContent = customer.name;
     document.getElementById("custPhone").textContent = customer.phone;
     document.getElementById("custAddress").textContent = customer.address;
@@ -371,60 +348,36 @@ async function viewCustomerDetails(customerId) {
     document.getElementById("custDue").textContent = customer.totalLoanAmount.toLocaleString();
     document.getElementById("custPaid").textContent = totalPaid.toLocaleString();
     document.getElementById("custRemaining").textContent = remainingAmount.toLocaleString();
-    document.getElementById("custDailyPayment").textContent = `₹${dailyPayment}`;
+    document.getElementById("custDailyPayment").textContent = `₹${customer.dailyPayment || Math.round(customer.totalLoanAmount / 100)}`;
     
-    const statusElement = document.getElementById("custStatus");
-    statusElement.innerHTML = `
-      <span class="status-${customerWithStatus.calculatedStatus}">
-        ${customerWithStatus.calculatedStatus === 'deactivated' ? 'Completed' : 
-          customerWithStatus.calculatedStatus === 'pending' ? 'Overdue Pending' : 'Active'}
-      </span>
-    `;
+    // Update status
+    document.getElementById("custStatus").innerHTML = `<span class="status-${customerWithStatus.calculatedStatus}">${customerWithStatus.calculatedStatus}</span>`;
     
-    const daysStatusElement = document.getElementById("custDaysStatus");
-    if (daysStatus.status === 'completed') {
-      daysStatusElement.innerHTML = '<span class="status-deactivated">Loan Completed</span>';
-    } else if (daysStatus.status === 'overdue') {
-      daysStatusElement.innerHTML = `<span class="status-pending">Overdue: ${daysStatus.days} days</span>`;
-    } else {
-      daysStatusElement.innerHTML = `<span class="status-active">${daysStatus.days} days remaining</span>`;
+    // Update days status
+    const daysStatusText = daysStatus.status === 'completed' ? 'Loan Completed' :
+                          daysStatus.status === 'overdue' ? `Overdue: ${daysStatus.days} days` :
+                          `${daysStatus.days} days remaining`;
+    document.getElementById("custDaysStatus").innerHTML = `<span class="status-${daysStatus.status}">${daysStatusText}</span>`;
+    
+    // Show/hide banners
+    document.getElementById("completionBanner").classList.toggle("hidden", !isDeactivated);
+    document.getElementById("pendingWarning").classList.toggle("hidden", !isPending);
+    
+    if (isPending) {
+      document.getElementById("overdueDays").textContent = daysStatus.days;
     }
     
-    const completionBanner = document.getElementById("completionBanner");
-    const pendingWarning = document.getElementById("pendingWarning");
-    
-    if (completionBanner) {
-      completionBanner.classList.toggle("hidden", !isDeactivated);
-      if (isDeactivated) {
-        const latestPayment = customer.payments?.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-        const completionDateElem = document.getElementById("completionDate");
-        if (completionDateElem) {
-          completionDateElem.textContent = latestPayment ? latestPayment.date : new Date().toISOString().split('T')[0];
-        }
-      }
-    }
-    
-    if (pendingWarning) {
-      pendingWarning.classList.toggle("hidden", !isPending);
-      if (isPending) {
-        document.getElementById("overdueDays").textContent = daysStatus.days;
-      }
-    }
-    
-    const progressSection = document.getElementById("progressSection");
-    const progressFill = document.getElementById("progressFill");
-    const progressPercent = document.getElementById("progressPercent");
-    const progressAmount = document.getElementById("progressAmount");
-    
+    // Update progress
     if (isDeactivated) {
-      progressSection.style.display = 'none';
+      document.getElementById("progressSection").style.display = 'none';
     } else {
-      progressSection.style.display = 'block';
-      progressFill.style.width = `${paymentProgress}%`;
-      progressPercent.textContent = `${paymentProgress.toFixed(1)}% Paid`;
-      progressAmount.textContent = `(₹${totalPaid.toLocaleString()} of ₹${customer.totalLoanAmount.toLocaleString()})`;
+      document.getElementById("progressSection").style.display = 'block';
+      document.getElementById("progressFill").style.width = `${paymentProgress}%`;
+      document.getElementById("progressPercent").textContent = `${paymentProgress.toFixed(1)}% Paid`;
+      document.getElementById("progressAmount").textContent = `(₹${totalPaid.toLocaleString()} of ₹${customer.totalLoanAmount.toLocaleString()})`;
     }
     
+    // Render payment history
     renderPaymentHistory(customer.payments, totalPaid);
     
   } catch (err) {
@@ -438,8 +391,8 @@ function renderPaymentHistory(payments, totalPaid) {
   
   if (!payments || payments.length === 0) {
     container.innerHTML = `
-      <div class="no-payments" style="text-align: center; padding: 40px; color: #888;">
-        <i class="fas fa-receipt fa-3x" style="margin-bottom: 15px; opacity: 0.5;"></i>
+      <div class="no-payments">
+        <i class="fas fa-receipt fa-3x"></i>
         <h4>No Payment History</h4>
         <p>No payments have been recorded yet.</p>
       </div>
@@ -447,7 +400,7 @@ function renderPaymentHistory(payments, totalPaid) {
     return;
   }
 
-  container.innerHTML = `
+  let tableHTML = `
     <div class="payment-table-container">
       <table class="payment-table-customer">
         <thead>
@@ -459,47 +412,54 @@ function renderPaymentHistory(payments, totalPaid) {
           </tr>
         </thead>
         <tbody>
-          ${payments.map(payment => `
-            <tr>
-              <td>${payment.date}</td>
-              <td class="payment-amount">₹${payment.amount}</td>
-              <td class="payment-principal">₹${payment.principal}</td>
-              <td>
-                <button class="btn btn-danger btn-sm" onclick="deletePayment('${currentCustomerId}', '${payment.date}')" style="padding: 5px 10px;">
-                  Delete
-                </button>
-              </td>
-            </tr>
-          `).join('')}
+  `;
+
+  payments.forEach(payment => {
+    tableHTML += `
+      <tr>
+        <td>${payment.date}</td>
+        <td class="payment-amount">₹${payment.amount}</td>
+        <td class="payment-principal">₹${payment.principal}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="deletePayment('${currentCustomerId}', '${payment.date}')">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  tableHTML += `
         </tbody>
       </table>
     </div>
-    <div class="payment-summary" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+    <div class="payment-summary">
       <strong>Total Payments: ₹${totalPaid.toLocaleString()}</strong>
     </div>
   `;
+
+  container.innerHTML = tableHTML;
 }
 
-// ==================== CUSTOMER MANAGEMENT FUNCTIONS ====================
-
-async function editCustomer(customerId) {
+// Stub functions for other features
+function editCustomer(customerId) {
   console.log("Edit customer:", customerId);
-  // Implementation for editing customer
+  alert("Edit feature coming soon");
 }
 
-async function addPayment() {
+function addPayment() {
   console.log("Add payment for:", currentCustomerId);
-  // Implementation for adding payment
+  alert("Add payment feature coming soon");
 }
 
-async function deletePayment(customerId, paymentDate) {
+function deletePayment(customerId, paymentDate) {
   console.log("Delete payment:", customerId, paymentDate);
-  // Implementation for deleting payment
+  alert("Delete payment feature coming soon");
 }
 
-async function deleteCustomer(customerId, customerName) {
+function deleteCustomer(customerId, customerName) {
   console.log("Delete customer:", customerId, customerName);
-  // Implementation for deleting customer
+  if (confirm(`Are you sure you want to delete ${customerName}?`)) {
+    alert("Delete customer feature coming soon");
+  }
 }
 
 // ==================== MAIN DASHBOARD FUNCTION ====================
@@ -508,24 +468,10 @@ async function loadOwnerDashboard() {
   try {
     showLoading("customersContainer", "Loading customers...");
     
-    console.log("🔄 Loading customers from:", `${window.API_BASE}/api/customers`);
-    
-    const response = await fetch(`${window.API_BASE}/api/customers`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      mode: 'cors'
-    });
-    
-    console.log("📡 Response status:", response.status);
-    console.log("✅ Response ok:", response.ok);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch customers: HTTP ${response.status}`);
-    }
+    const response = await fetch(`${window.API_BASE}/api/customers`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     
     const customers = await response.json();
-    console.log("✅ Successfully loaded customers:", customers.length);
-    
     allCustomers = customers.map(calculateCustomerStatus);
 
     updateAnalytics(allCustomers);
@@ -533,104 +479,94 @@ async function loadOwnerDashboard() {
     applyFilters();
     
   } catch (err) {
-    console.error("❌ Error loading owner dashboard:", err);
+    console.error("Error loading owner dashboard:", err);
     showError("customersContainer", `Failed to load customers: ${err.message}`);
   }
 }
 
 // ==================== INITIALIZATION ====================
 
-document.addEventListener("DOMContentLoaded", () => {
+function initializeOwnerDashboard() {
   console.log("🏁 Owner Dashboard Initialized");
-  console.log("🌐 Final API Base:", window.API_BASE);
+  
+  // Event listeners
+  document.getElementById("backToListBtn")?.addEventListener("click", () => {
+    document.getElementById("customerDetailView").classList.add("hidden");
+    document.getElementById("customerList").classList.remove("hidden");
+  });
+  
+  document.getElementById("addCustomerBtn")?.addEventListener("click", () => {
+    document.getElementById("addCustomerForm").classList.remove("hidden");
+    document.getElementById("customerList").classList.add("hidden");
+  });
+  
+  document.getElementById("cancelAddBtn")?.addEventListener("click", () => {
+    document.getElementById("addCustomerForm").classList.add("hidden");
+    document.getElementById("customerList").classList.remove("hidden");
+  });
+  
+  document.getElementById("saveCustomerBtn")?.addEventListener("click", async () => {
+    const name = document.getElementById("newCustName").value.trim();
+    const phone = document.getElementById("newCustPhone").value.trim();
+    const address = document.getElementById("newCustAddress").value.trim();
+    const startDate = document.getElementById("newCustStart").value;
+    const totalLoanAmount = parseFloat(document.getElementById("newCustDue").value) || 0;
 
-  // Setup event listeners
-  const backToListBtn = document.getElementById("backToListBtn");
-  const addCustomerBtn = document.getElementById("addCustomerBtn");
-  const saveCustomerBtn = document.getElementById("saveCustomerBtn");
-  const cancelAddBtn = document.getElementById("cancelAddBtn");
-  const ownerLogoutBtn = document.getElementById("ownerLogoutBtn");
-  const searchInput = document.getElementById("searchCustomer");
+    if (!name || !phone) {
+      alert("Name and phone are required!");
+      return;
+    }
 
-  if (backToListBtn) {
-    backToListBtn.addEventListener("click", () => {
-      document.getElementById("customerDetailView")?.classList.add("hidden");
-      document.getElementById("customerList")?.classList.remove("hidden");
-      currentCustomerId = null;
-    });
-  }
+    const newCustomer = { 
+      name, 
+      phone, 
+      address, 
+      loanStartDate: startDate, 
+      totalLoanAmount, 
+      dailyPayment: Math.round(totalLoanAmount / 100), 
+      payments: [], 
+      status: "active" 
+    };
 
-  if (addCustomerBtn) {
-    addCustomerBtn.addEventListener("click", () => {
-      document.getElementById("addCustomerForm")?.classList.remove("hidden");
-      document.getElementById("customerList")?.classList.add("hidden");
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById("newCustStart")?.setAttribute("value", today);
-    });
-  }
+    try {
+      const res = await fetch(`${window.API_BASE}/api/owner/add-customer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCustomer),
+      });
 
-  if (saveCustomerBtn) {
-    saveCustomerBtn.addEventListener("click", async () => {
-      const name = document.getElementById("newCustName").value.trim();
-      const phone = document.getElementById("newCustPhone").value.trim();
-      const address = document.getElementById("newCustAddress").value.trim();
-      const startDate = document.getElementById("newCustStart").value;
-      const totalLoanAmount = parseFloat(document.getElementById("newCustDue").value) || 0;
-
-      if (!name || !phone || phone.length < 10) {
-        alert("Valid name and 10-digit phone are required!");
-        return;
+      if (res.ok) {
+        alert("Customer added successfully!");
+        document.getElementById("addCustomerForm").classList.add("hidden");
+        document.getElementById("customerList").classList.remove("hidden");
+        loadOwnerDashboard();
+      } else {
+        const data = await res.json();
+        alert("Failed: " + (data.message || "Unknown error"));
       }
+    } catch (err) {
+      alert("Error adding customer.");
+    }
+  });
+  
+  document.getElementById("ownerLogoutBtn")?.addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
+  
+  document.getElementById("searchCustomer")?.addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase();
+    const filtered = allCustomers.filter(c =>
+      c.name.toLowerCase().includes(term) || 
+      c.phone.includes(term) || 
+      c.address.toLowerCase().includes(term)
+    );
+    updateCustomerCount(filtered.length);
+    renderCustomerList(filtered);
+  });
 
-      const dailyPayment = Math.round(totalLoanAmount / 100);
-      const newCustomer = { name, phone, address, loanStartDate: startDate, totalLoanAmount, dailyPayment, payments: [], status: "active" };
-
-      try {
-        const res = await fetch(`${window.API_BASE}/api/owner/add-customer`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newCustomer),
-        });
-
-        if (res.ok) {
-          alert("✅ Customer added successfully!");
-          document.getElementById("addCustomerForm")?.classList.add("hidden");
-          document.getElementById("customerList")?.classList.remove("hidden");
-          loadOwnerDashboard();
-        } else {
-          const data = await res.json();
-          alert("❌ Failed: " + (data.message || "Unknown error"));
-        }
-      } catch (err) {
-        alert("❌ Error adding customer.");
-      }
-    });
-  }
-
-  if (cancelAddBtn) {
-    cancelAddBtn.addEventListener("click", () => {
-      document.getElementById("addCustomerForm")?.classList.add("hidden");
-      document.getElementById("customerList")?.classList.remove("hidden");
-    });
-  }
-
-  if (ownerLogoutBtn) {
-    ownerLogoutBtn.addEventListener("click", () => {
-      window.location.href = "index.html";
-    });
-  }
-
-  if (searchInput) {
-    searchInput.addEventListener("input", (e) => {
-      const term = e.target.value.toLowerCase();
-      const filtered = allCustomers.filter(c =>
-        c.name.toLowerCase().includes(term) || c.phone.includes(term) || c.address.toLowerCase().includes(term)
-      );
-      updateCustomerCount(filtered.length);
-      renderCustomerList(filtered);
-    });
-  }
-
-  // Load dashboard
+  // Load data
   loadOwnerDashboard();
-});
+}
+
+// Start the dashboard when DOM is loaded
+document.addEventListener("DOMContentLoaded", initializeOwnerDashboard);
