@@ -1,4 +1,4 @@
-// owner.js - COMPLETE AND ORGANIZED VERSION
+// owner.js - CORRECTED VERSION WITH SINGLE loadOwnerDashboard FUNCTION
 console.log("📊 Owner Dashboard Loaded");
 
 // Use the global API_BASE variable with fallback
