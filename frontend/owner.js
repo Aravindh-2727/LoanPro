@@ -1,4 +1,4 @@
-// owner.js - UPDATED WITH BETTER ERROR HANDLING
+// owner.js - COMPLETE CORRECTED VERSION
 console.log("📊 Owner Dashboard Loaded");
 
 // Use the global API_BASE variable with fallback
@@ -18,47 +18,6 @@ const addCustomerForm = document.getElementById("addCustomerForm");
 const customerDetailView = document.getElementById("customerDetailView");
 const customerListSection = document.getElementById("customerList");
 const backToListBtn = document.getElementById("backToListBtn");
-
-// ✅ Load Dashboard + Customers with Loading Animation
-async function loadOwnerDashboard() {
-  try {
-    showLoading("customersContainer", "Loading customers...");
-    
-    console.log("🔄 Loading customers from:", `${window.API_BASE}/api/customers`);
-    
-    const response = await fetch(`${window.API_BASE}/api/customers`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        mode: 'cors'
-    });
-    
-    console.log("📡 Response status:", response.status);
-    console.log("📡 Response ok:", response.ok);
-    
-    if (!response.ok) {
-        // Try to get error message from response
-        let errorMessage = `HTTP ${response.status}`;
-        try {
-            const errorData = await response.text();
-            console.error("❌ Error response:", errorData);
-            if (errorData.includes('<!DOCTYPE')) {
-                errorMessage = "Server returned HTML instead of JSON. Check if backend is running correctly.";
-            } else {
-                errorMessage = errorData;
-            }
-        } catch (e) {
-            // Ignore if we can't parse error response
-        }
-        throw new Error(`Failed to fetch customers: ${errorMessage}`);
-    }
-    
-    const customers = await response.json();
-    console.log("✅ Successfully loaded customers:", customers.length);
-    
-    // Calculate pending status for each customer
-    allCustomers = customers.map(customer => calculateCustomerStatus(customer));
 
 // ==================== UTILITY FUNCTIONS ====================
 
@@ -92,6 +51,31 @@ function calculateDaysStatus(customer) {
   } else {
     const daysLeft = Math.max(0, 100 - daysSinceStart);
     return { status: 'active', days: daysLeft };
+  }
+}
+
+function showLoading(containerId, message = "Loading...") {
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.innerHTML = `
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>${message}</p>
+      </div>
+    `;
+  }
+}
+
+function showError(containerId, message) {
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.innerHTML = `
+      <div class="error-container">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>${message}</p>
+        <button class="btn btn-primary" onclick="loadOwnerDashboard()">Retry</button>
+      </div>
+    `;
   }
 }
 
@@ -280,7 +264,9 @@ function renderCustomerRowFullWidth(customer) {
   const isDeactivated = customer.calculatedStatus === 'deactivated';
   const isPending = customer.calculatedStatus === 'pending';
   const daysStatus = calculateDaysStatus(customer);
-  const dailyPayment = customer.dailyPayment || Math.round(customer.totalLoanAmount * 0.01);
+  
+  // FIXED: Calculate daily payment properly - loan amount / 100
+  const dailyPayment = customer.dailyPayment || Math.round(customer.totalLoanAmount / 100);
   const showDeleteButton = isDeactivated;
   
   return `
@@ -386,6 +372,9 @@ async function viewCustomerDetails(customerId) {
     const isDeactivated = customerWithStatus.calculatedStatus === 'deactivated';
     const isPending = customerWithStatus.calculatedStatus === 'pending';
     
+    // FIXED: Calculate daily payment properly for customer details view
+    const dailyPayment = customer.dailyPayment || Math.round(customer.totalLoanAmount / 100);
+    
     // Show customer detail view immediately
     if (customerDetailView) customerDetailView.classList.remove("hidden");
     if (customerListSection) customerListSection.classList.add("hidden");
@@ -398,7 +387,7 @@ async function viewCustomerDetails(customerId) {
     document.getElementById("custDue").textContent = customer.totalLoanAmount.toLocaleString();
     document.getElementById("custPaid").textContent = totalPaid.toLocaleString();
     document.getElementById("custRemaining").textContent = remainingAmount.toLocaleString();
-    document.getElementById("custDailyPayment").textContent = `₹${customer.dailyPayment || Math.round(customer.totalLoanAmount * 0.01)}`;
+    document.getElementById("custDailyPayment").textContent = `₹${dailyPayment}`;
     
     // Update status
     const statusElement = document.getElementById("custStatus");
@@ -546,14 +535,252 @@ function renderPaymentHistoryNew(payments, totalPaid) {
   `;
 }
 
+// ==================== CUSTOMER MANAGEMENT FUNCTIONS ====================
+
+async function editCustomer(customerId) {
+  try {
+    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`);
+    if (!res.ok) throw new Error("Failed to fetch customer details");
+    
+    const customer = await res.json();
+    
+    const editFormHTML = `
+      <div class="form-popup" id="editCustomerForm" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1001; width: 90%; max-width: 500px;">
+        <h3 style="margin-bottom: 20px; color: #2c3e50;"><i class="fas fa-edit"></i> Edit Customer</h3>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Name:</label>
+          <input type="text" id="editCustName" value="${customer.name}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Phone:</label>
+          <input type="text" id="editCustPhone" value="${customer.phone}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Address:</label>
+          <textarea id="editCustAddress" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; height: 80px;">${customer.address}</textarea>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Loan Start Date:</label>
+          <input type="date" id="editCustStart" value="${customer.loanStartDate}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Total Loan Amount (₹):</label>
+          <input type="number" id="editCustDue" value="${customer.totalLoanAmount}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 5px; font-weight: bold;">Daily Payment (₹):</label>
+          <input type="number" id="editCustDaily" value="${customer.dailyPayment || Math.round(customer.totalLoanAmount / 100)}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+
+        <div class="form-actions" style="display: flex; gap: 10px;">
+          <button id="updateCustomerBtn" class="btn btn-success" style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; flex: 1;">
+            <i class="fas fa-check"></i> Update
+          </button>
+          <button id="cancelEditBtn" class="btn btn-danger" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; flex: 1;">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+        </div>
+      </div>
+      <div class="overlay" id="editOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;"></div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', editFormHTML);
+    
+    document.getElementById('updateCustomerBtn').addEventListener('click', () => updateCustomer(customerId));
+    document.getElementById('cancelEditBtn').addEventListener('click', closeEditForm);
+    document.getElementById('editOverlay').addEventListener('click', closeEditForm);
+    
+  } catch (err) {
+    console.error("❌ Error loading customer for edit:", err);
+    alert("Failed to load customer details for editing.");
+  }
+}
+
+async function updateCustomer(customerId) {
+  const name = document.getElementById("editCustName").value.trim();
+  const phone = document.getElementById("editCustPhone").value.trim();
+  const address = document.getElementById("editCustAddress").value.trim();
+  const loanStartDate = document.getElementById("editCustStart").value;
+  const totalLoanAmount = parseFloat(document.getElementById("editCustDue").value) || 0;
+  const dailyPayment = parseFloat(document.getElementById("editCustDaily").value) || 0;
+
+  if (!name || !phone) {
+    alert("Name and phone are required!");
+    return;
+  }
+
+  if (phone.length < 10) {
+    alert("Please enter a valid phone number (at least 10 digits)");
+    return;
+  }
+
+  const updatedCustomer = {
+    name: name,
+    phone: phone,
+    address: address,
+    loanStartDate: loanStartDate,
+    totalLoanAmount: totalLoanAmount,
+    dailyPayment: dailyPayment
+  };
+
+  try {
+    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`, {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(updatedCustomer),
+    });
+
+    if (res.ok) {
+      alert("✅ Customer updated successfully!");
+      closeEditForm();
+      loadOwnerDashboard();
+    } else {
+      const errorData = await res.json();
+      alert("❌ Failed to update customer: " + (errorData.message || "Unknown error"));
+    }
+  } catch (err) {
+    console.error("❌ Error updating customer:", err);
+    alert("❌ Failed to update customer. Check console for details.");
+  }
+}
+
+function closeEditForm() {
+  const editForm = document.getElementById('editCustomerForm');
+  const overlay = document.getElementById('editOverlay');
+  
+  if (editForm) editForm.remove();
+  if (overlay) overlay.remove();
+}
+
+async function addPayment() {
+  try {
+    const customerRes = await fetch(`${window.API_BASE}/api/customers/${currentCustomerId}`);
+    const customer = await customerRes.json();
+    const customerWithStatus = calculateCustomerStatus(customer);
+    
+    if (customerWithStatus.calculatedStatus === 'deactivated') {
+      alert("This loan has already been deactivated. No further payments can be added.");
+      return;
+    }
+    
+    const totalPaid = customer.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+    const remainingAmount = Math.max(0, customer.totalLoanAmount - totalPaid);
+    
+    const amount = parseFloat(prompt(`Enter payment amount (Remaining: ₹${remainingAmount}):`));
+    
+    if (!amount || amount <= 0) {
+      alert("Please enter a valid payment amount");
+      return;
+    }
+    
+    if (amount > remainingAmount) {
+      alert(`Payment amount (₹${amount}) exceeds remaining amount (₹${remainingAmount}). Please enter a smaller amount.`);
+      return;
+    }
+    
+    const principal = amount;
+    const today = new Date().toISOString().split('T')[0];
+    
+    const paymentData = {
+      date: today,
+      amount: amount,
+      principal: principal
+    };
+    
+    const res = await fetch(`${window.API_BASE}/api/customers/${currentCustomerId}/payments`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(paymentData),
+    });
+    
+    if (res.ok) {
+      alert("✅ Payment added successfully!");
+      viewCustomerDetails(currentCustomerId);
+    } else {
+      const errorData = await res.json();
+      alert("❌ Failed to add payment: " + (errorData.message || "Unknown error"));
+    }
+  } catch (err) {
+    console.error("❌ Error adding payment:", err);
+    alert("❌ Failed to add payment. Check console for details.");
+  }
+}
+
+async function deletePayment(customerId, paymentDate) {
+  if (!confirm(`Are you sure you want to delete payment from ${paymentDate}?`)) {
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}/payments/${encodeURIComponent(paymentDate)}`, {
+      method: "DELETE",
+    });
+    
+    if (res.ok) {
+      alert("✅ Payment deleted successfully!");
+      viewCustomerDetails(currentCustomerId);
+    } else {
+      alert("❌ Failed to delete payment");
+    }
+  } catch (err) {
+    console.error("❌ Error deleting payment:", err);
+    alert("❌ Failed to delete payment.");
+  }
+}
+
+async function deleteCustomer(customerId, customerName) {
+  try {
+    const res = await fetch(`${window.API_BASE}/api/customers/${customerId}`);
+    if (!res.ok) throw new Error("Failed to fetch customer details");
+    
+    const customer = await res.json();
+    const customerWithStatus = calculateCustomerStatus(customer);
+    
+    if (customerWithStatus.calculatedStatus !== 'deactivated') {
+      alert(`❌ Cannot delete customer "${customerName}". Only completed/deactivated loans can be removed.`);
+      return;
+    }
+    
+    if (!confirm(`Are you sure you want to permanently delete customer "${customerName}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    showLoading("customersContainer", "Deleting customer...");
+    
+    const deleteRes = await fetch(`${window.API_BASE}/api/customers/${customerId}`, {
+      method: "DELETE",
+    });
+    
+    if (deleteRes.ok) {
+      alert("✅ Customer deleted successfully!");
+      loadOwnerDashboard();
+    } else {
+      throw new Error("Failed to delete customer");
+    }
+  } catch (err) {
+    console.error("❌ Error deleting customer:", err);
+    alert("❌ Failed to delete customer.");
+    loadOwnerDashboard();
+  }
+}
+
 // ==================== MAIN DASHBOARD FUNCTION ====================
 
 async function loadOwnerDashboard() {
   try {
-    // Remove loading animation - just show empty container
-    if (customersContainer) {
-      customersContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Loading customers...</div>';
-    }
+    showLoading("customersContainer", "Loading customers...");
     
     console.log("🔄 Loading customers from:", `${window.API_BASE}/api/customers`);
     
@@ -587,16 +814,7 @@ async function loadOwnerDashboard() {
     
   } catch (err) {
     console.error("❌ Error loading owner dashboard:", err);
-    if (customersContainer) {
-      customersContainer.innerHTML = `
-        <div class="error-container" style="text-align: center; padding: 40px; color: #e74c3c;">
-          <i class="fas fa-exclamation-triangle fa-2x"></i>
-          <h3>Failed to load customers</h3>
-          <p>${err.message}</p>
-          <button class="btn btn-primary" onclick="loadOwnerDashboard()">Retry</button>
-        </div>
-      `;
-    }
+    showError("customersContainer", `Failed to load customers: ${err.message}`);
   }
 }
 
@@ -614,34 +832,124 @@ document.getElementById("ownerLogoutBtn")?.addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
-// ==================== MISSING FUNCTION DECLARATIONS ====================
-
-function editCustomer(customerId) {
-  console.log("Edit customer:", customerId);
-  alert("Edit customer functionality would go here");
-}
-
-function addPayment() {
-  console.log("Add payment for:", currentCustomerId);
-  alert("Add payment functionality would go here");
-}
-
-function deleteCustomer(customerId, customerName) {
-  if (confirm(`Are you sure you want to delete customer "${customerName}"? This action cannot be undone.`)) {
-    console.log("Delete customer:", customerId);
-    alert("Delete customer functionality would go here");
-  }
-}
-
-function deletePayment(customerId, paymentDate) {
-  if (confirm(`Are you sure you want to delete payment from ${paymentDate}?`)) {
-    console.log("Delete payment:", customerId, paymentDate);
-    alert("Delete payment functionality would go here");
-  }
-}
-
 // Back to list functionality
-document.getElementById("backToListBtn")?.addEventListener("click", () => {
-  if (customerDetailView) customerDetailView.classList.add("hidden");
-  if (customerListSection) customerListSection.classList.remove("hidden");
+if (backToListBtn) {
+  backToListBtn.addEventListener("click", () => {
+    if (customerDetailView) customerDetailView.classList.add("hidden");
+    if (customerListSection) customerListSection.classList.remove("hidden");
+    currentCustomerId = null;
+  });
+}
+
+// Add Customer functionality
+if (addCustomerBtn) {
+  addCustomerBtn.addEventListener("click", () => {
+    console.log("➕ Add Customer button clicked");
+    addCustomerForm.classList.remove("hidden");
+    if (customerListSection) customerListSection.classList.add("hidden");
+    
+    const today = new Date().toISOString().split('T')[0];
+    const startDateInput = document.getElementById("newCustStart");
+    if (startDateInput) startDateInput.value = today;
+  });
+}
+
+// Save New Customer
+document.getElementById("saveCustomerBtn")?.addEventListener("click", async () => {
+  console.log("💾 Save Customer button clicked");
+  
+  const name = document.getElementById("newCustName").value.trim();
+  const phone = document.getElementById("newCustPhone").value.trim();
+  const address = document.getElementById("newCustAddress").value.trim();
+  const startDate = document.getElementById("newCustStart").value;
+  const totalLoanAmount = parseFloat(document.getElementById("newCustDue").value) || 0;
+
+  if (!name || !phone) {
+    alert("Name and phone are required!");
+    return;
+  }
+
+  if (phone.length < 10) {
+    alert("Please enter a valid phone number (at least 10 digits)");
+    return;
+  }
+
+  // FIXED: Calculate daily payment as loan amount / 100
+  const dailyPayment = Math.round(totalLoanAmount / 100);
+
+  const newCustomer = {
+    name: name,
+    phone: phone,
+    address: address,
+    loanStartDate: startDate,
+    totalLoanAmount: totalLoanAmount,
+    dailyPayment: dailyPayment,
+    payments: [],
+    status: "active"
+  };
+
+  try {
+    const res = await fetch(`${window.API_BASE}/api/owner/add-customer`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(newCustomer),
+    });
+
+    const responseData = await res.json();
+    
+    if (res.ok) {
+      alert("✅ Customer added successfully!");
+      
+      addCustomerForm.classList.add("hidden");
+      if (customerListSection) customerListSection.classList.remove("hidden");
+      
+      document.getElementById("newCustName").value = "";
+      document.getElementById("newCustPhone").value = "";
+      document.getElementById("newCustAddress").value = "";
+      document.getElementById("newCustStart").value = "";
+      document.getElementById("newCustDue").value = "";
+      
+      loadOwnerDashboard();
+    } else {
+      alert("❌ Failed to add customer: " + (responseData.message || "Unknown error"));
+    }
+  } catch (err) {
+    console.error("❌ Error adding customer:", err);
+    alert("❌ Failed to add customer. Check console for details.");
+  }
 });
+
+// Cancel Add Customer
+document.getElementById("cancelAddBtn")?.addEventListener("click", () => {
+  console.log("❌ Cancel button clicked");
+  addCustomerForm.classList.add("hidden");
+  if (customerListSection) customerListSection.classList.remove("hidden");
+  
+  document.getElementById("newCustName").value = "";
+  document.getElementById("newCustPhone").value = "";
+  document.getElementById("newCustAddress").value = "";
+  document.getElementById("newCustStart").value = "";
+  document.getElementById("newCustDue").value = "";
+});
+
+// Search functionality
+if (searchInput) {
+  searchInput.addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase();
+    if (term === '') {
+      applyFilters();
+    } else {
+      let filtered = allCustomers.filter(c =>
+        c.name.toLowerCase().includes(term) || 
+        c.phone.includes(term) ||
+        c.address.toLowerCase().includes(term)
+      );
+      
+      updateCustomerCount(filtered.length);
+      renderCustomerList(filtered);
+    }
+  });
+}
