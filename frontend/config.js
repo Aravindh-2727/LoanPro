@@ -1,4 +1,4 @@
-// config.js - FIXED VERSION WITH BETTER ERROR HANDLING
+// config.js - FRONTEND CONFIGURATION
 console.log("⚙️ Loading frontend configuration...");
 
 try {
@@ -13,17 +13,7 @@ try {
     console.log("✅ Config loaded successfully");
     console.log("🌐 API Base:", window.API_BASE);
     console.log("📍 Current Hostname:", window.location.hostname);
-    console.log("🔗 Full URL:", window.location.href);
     
-    // Verify the API is accessible
-    fetch(`${window.API_BASE}/api/health`)
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return response.json();
-        })
-        .then(data => console.log("✅ Backend health check:", data))
-        .catch(error => console.error("❌ Backend health check failed:", error));
-        
 } catch (error) {
     console.error("❌ Error in config:", error);
     // Fallback API base
