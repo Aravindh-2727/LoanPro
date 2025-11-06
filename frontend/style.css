@@ -22,7 +22,7 @@
 }
 
 img{
-    height: 50px;
+    height: 60px;
 }
 
 /* ===== RESET & BASE STYLES ===== */
@@ -345,7 +345,6 @@ tr:hover {
 tr:last-child td {
     border-bottom: none;
 }
-
 
 /* Customer Details Section for Owner Dashboard */
 .customer-details-section {
@@ -1108,7 +1107,6 @@ tr:last-child td {
         flex: 1;
     }
 }
-
 
 /* Owner Contact Card */
 .owner-contact-card {
