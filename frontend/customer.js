@@ -1,4 +1,4 @@
-// customer.js - UPDATED WITH FALLBACK
+// customer.js - CORRECTED VERSION
 console.log("👤 Customer Dashboard Loaded");
 
 // Use the global API_BASE variable with fallback
@@ -16,28 +16,6 @@ if (!loggedInCustomer) {
 } else {
   loadCustomerDashboard(loggedInCustomer);
 }
-
-// ... rest of customer.js remains the same ...
-
-async function loadCustomerDashboard(customer) {
-  document.getElementById("dashboardStatus").textContent = "Loading your dashboard...";
-
-  try {
-    const res = await fetch(`${window.API_BASE}/api/customers/${customer._id}`);
-    
-    if (!res.ok) {
-      throw new Error(`Failed to fetch customer data: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    // ... rest of the function remains the same
-  } catch (err) {
-    console.error("❌ Error loading customer dashboard:", err);
-    document.getElementById("dashboardStatus").textContent = "Failed to load dashboard. Please try again.";
-  }
-}
-
-// ... rest of customer.js remains the same
 
 // ✅ Calculate Customer Status (same as owner dashboard)
 function calculateCustomerStatus(customer) {
