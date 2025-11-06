@@ -62,19 +62,11 @@
         </div>
       </div>
 
-
-
-
-
-      
       <!-- Customer List Section -->
 <div id="customerList" class="customer-list-fullwidth">
   <h3><i class="fas fa-users"></i> All Customers</h3>
 
-
-
-<!---- Add this after the search box and before the analytics section -->
-<div class="customer-list-filters-full">
+  <div class="customer-list-filters-full">
     <div class="filter-controls-full">
         <div class="filter-group-full">
             <label for="filterStatus"><i class="fas fa-filter"></i> Status:</label>
@@ -117,6 +109,10 @@
                 <option value="days">Days Remaining</option>
             </select>
         </div>
+        
+        <button class="btn btn-secondary btn-sm" onclick="clearAllFilters()" style="white-space: nowrap;">
+            <i class="fas fa-times"></i> Clear Filters
+        </button>
     </div>
     
     <div class="customer-count-full" id="customerCount">
@@ -129,26 +125,6 @@
   </div>
 </div>
 
-
-
-
-<div class="customer-list-filters-full">
-    <div class="filter-controls-full">
-        <!-- Existing filter groups... -->
-        
-        <!-- Add Clear Filters button -->
-        <button class="btn btn-secondary btn-sm" onclick="clearAllFilters()" style="white-space: nowrap;">
-            <i class="fas fa-times"></i> Clear Filters
-        </button>
-    </div>
-    
-    <div class="customer-count-full" id="customerCount">
-        Loading...
-    </div>
-</div>
-
-
-
       <!-- 🧾 Customer Detail View -->
 <div id="customerDetailView" class="hidden">
   <div class="card">
@@ -156,8 +132,6 @@
       <i class="fas fa-arrow-left"></i> Back to List
     </button>
     
-    
-
     <div class="customer-details-section">
       <h2 id="custName" style="color: var(--primary); margin-bottom: 20px;"></h2>
       
@@ -258,6 +232,7 @@
     </div>
   </div>
 </div>
+
       <!-- Add Customer Form -->
       <div id="addCustomerForm" class="hidden form-popup">
         <h3><i class="fas fa-user-plus"></i> Add New Customer</h3>
@@ -289,7 +264,7 @@
     </div>
   </div>
 
-  <!-- Load script.js first, then owner.js -->
+  <!-- Load config.js first, then other scripts -->
   <script src="config.js"></script>
   <script src="script.js"></script>
   <script src="owner.js"></script>
