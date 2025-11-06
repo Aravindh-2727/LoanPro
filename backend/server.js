@@ -7,21 +7,20 @@ require('dotenv').config();
 
 const app = express();
 
-// ✅ SIMPLE CORS CONFIGURATION - ALLOW ALL ORIGINS
+// ✅ CORS Configuration - Allow all origins
 app.use(cors({
-    origin: "*", // Allow all origins during development
+    origin: "*",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With", "Origin"]
 }));
 
-// ✅ Handle preflight requests for ALL routes
+// ✅ Handle preflight requests
 app.options('*', cors());
 
 // ✅ Body parser middleware
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.json());
 
 // ✅ MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://aravindhvinayagam2007_db_user:RXGSMWjV3lSxBjHH@loancluster.xhvqvbf.mongodb.net/loanDB?retryWrites=true&w=majority";
@@ -81,26 +80,32 @@ async function initializeOwner() {
             await owner.save();
             console.log('✅ Owner account created successfully');
         } else {
-            console.log('✅ Owner account already exists');
+            console.log('👤 Owner account already exists');
         }
     } catch (error) {
-        console.log('❌ Error in owner account setup:', error.message);
+        console.error('❌ Error initializing owner:', error);
     }
 }
 
-// ✅ Manual CORS headers for all responses
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, Origin');
-    
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+// ✅ Update Loan Status Function
+async function updateLoanStatus(customer) {
+    try {
+        const totalPaid = customer.payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+        
+        if (totalPaid >= customer.totalLoanAmount && customer.status === 'active') {
+            customer.status = 'deactivated';
+            await customer.save();
+            console.log(`✅ Loan deactivated for ${customer.name}`);
+        }
+        
+        return customer;
+    } catch (error) {
+        console.error('Error updating loan status:', error);
+        return customer;
     }
-    next();
-});
+}
 
-// ✅ Health Check
+// ✅ Health Check Endpoints
 app.get("/", (req, res) => {
     res.json({ 
         status: "Server is running!", 
@@ -148,39 +153,30 @@ app.get('/api/analytics', async (req, res) => {
     }
 });
 
-// ✅ Update Loan Status Function
-async function updateLoanStatus(customer) {
-    try {
-        const totalPaid = customer.payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
-        
-        if (totalPaid >= customer.totalLoanAmount && customer.status === 'active') {
-            customer.status = 'deactivated';
-            await customer.save();
-            console.log(`✅ Loan deactivated for ${customer.name}`);
-        }
-        
-        return customer;
-    } catch (error) {
-        console.error('Error updating loan status:', error);
-        return customer;
-    }
-}
+// 🔐 Authentication Routes
 
 // ✅ Owner Login
 app.post('/api/owner/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password are required' });
+        }
 
         const owner = await Owner.findOne({ email });
-        if (!owner) return res.status(400).json({ message: 'Owner not found' });
+        if (!owner) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
 
         const isMatch = await bcrypt.compare(password, owner.password);
-        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
 
         res.json({ 
             message: 'Login successful',
-            success: true 
+            success: true,
+            user: { email: owner.email }
         });
     } catch (error) {
         console.error('Owner login error:', error);
@@ -205,12 +201,15 @@ app.post('/api/customer/login', async (req, res) => {
             success: true
         });
     } catch (error) {
+        console.error('Customer login error:', error);
         res.status(500).json({ 
             message: 'Server error',
             success: false 
         });
     }
 });
+
+// 👥 Customer Management Routes
 
 // ✅ Get All Customers
 app.get('/api/customers', async (req, res) => {
@@ -225,6 +224,7 @@ app.get('/api/customers', async (req, res) => {
         
         res.json(updatedCustomers);
     } catch (error) {
+        console.error('Get customers error:', error);
         res.status(500).json({ 
             message: 'Server error',
             success: false 
@@ -242,66 +242,128 @@ app.get('/api/customers/:id', async (req, res) => {
         
         res.json(customer);
     } catch (error) {
+        console.error('Get customer error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
 // ✅ Owner Add Customer
 app.post('/api/owner/add-customer', async (req, res) => {
-  try {
-    const { name, phone, address, loanStartDate, totalLoanAmount, dailyPayment } = req.body;
-    
-    if (!name || !phone || !address || !loanStartDate || !totalLoanAmount) {
-      return res.status(400).json({ 
-        message: 'All fields are required' 
-      });
-    }
+    try {
+        const { name, phone, address, loanStartDate, totalLoanAmount, dailyPayment } = req.body;
+        
+        if (!name || !phone || !address || !loanStartDate || !totalLoanAmount) {
+            return res.status(400).json({ 
+                message: 'All fields are required' 
+            });
+        }
 
-    const existingCustomer = await Customer.findOne({ phone });
-    if (existingCustomer) {
-      return res.status(400).json({ message: 'Phone number already exists' });
-    }
+        const existingCustomer = await Customer.findOne({ phone });
+        if (existingCustomer) {
+            return res.status(400).json({ message: 'Phone number already exists' });
+        }
 
-    const newCustomer = new Customer({
-      name,
-      phone,
-      address,
-      loanStartDate,
-      totalLoanAmount,
-      dailyPayment: dailyPayment || Math.round(totalLoanAmount * 0.01),
-      payments: [],
-      status: 'active'
-    });
+        const newCustomer = new Customer({
+            name,
+            phone,
+            address,
+            loanStartDate,
+            totalLoanAmount,
+            dailyPayment: dailyPayment || Math.round(totalLoanAmount * 0.01),
+            payments: [],
+            status: 'active'
+        });
 
-    await newCustomer.save();
-    
-    res.status(201).json({ 
-      message: 'Customer added successfully', 
-      customer: newCustomer 
-    });
-  } catch (error) {
-    console.error('❌ Add customer error:', error);
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Phone number already exists' });
+        await newCustomer.save();
+        
+        res.status(201).json({ 
+            message: 'Customer added successfully', 
+            customer: newCustomer 
+        });
+    } catch (error) {
+        console.error('❌ Add customer error:', error);
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Phone number already exists' });
+        }
+        res.status(500).json({ 
+            message: 'Server error while adding customer',
+            error: error.message 
+        });
     }
-    res.status(500).json({ 
-      message: 'Server error while adding customer',
-      error: error.message 
-    });
-  }
 });
+
+// ✅ Update Customer
+app.put('/api/customers/:id', async (req, res) => {
+    try {
+        const { name, phone, address, loanStartDate, totalLoanAmount, dailyPayment } = req.body;
+        
+        const customer = await Customer.findById(req.params.id);
+        if (!customer) {
+            return res.status(404).json({ message: 'Customer not found' });
+        }
+
+        // Check if phone is taken by another customer
+        if (phone !== customer.phone) {
+            const existingCustomer = await Customer.findOne({ phone });
+            if (existingCustomer) {
+                return res.status(400).json({ message: 'Phone number already in use' });
+            }
+        }
+
+        customer.name = name;
+        customer.phone = phone;
+        customer.address = address;
+        customer.loanStartDate = loanStartDate;
+        customer.totalLoanAmount = totalLoanAmount;
+        customer.dailyPayment = dailyPayment;
+
+        await customer.save();
+        res.json({ message: 'Customer updated successfully', customer });
+        
+    } catch (error) {
+        console.error('Update customer error:', error);
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Phone number already exists' });
+        }
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ✅ Delete Customer
+app.delete('/api/customers/:id', async (req, res) => {
+    try {
+        const customer = await Customer.findByIdAndDelete(req.params.id);
+        if (!customer) return res.status(404).json({ message: 'Customer not found' });
+
+        res.json({ message: 'Customer deleted successfully' });
+    } catch (error) {
+        console.error('Delete customer error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// 💰 Payment Management Routes
 
 // ✅ Add Payment
 app.post('/api/customers/:id/payments', async (req, res) => {
     try {
         const { date, amount, principal } = req.body;
+        
+        if (!date || !amount) {
+            return res.status(400).json({ message: 'Date and amount are required' });
+        }
+
         let customer = await Customer.findById(req.params.id);
         if (!customer) return res.status(404).json({ message: 'Customer not found' });
 
+        const calculatedPrincipal = principal || amount;
+        const interest = amount - calculatedPrincipal;
+        
         customer.payments.push({ 
             date, 
             amount, 
-            principal: principal || amount
+            interest,
+            principal: calculatedPrincipal
         });
         
         customer = await updateLoanStatus(customer);
@@ -314,69 +376,28 @@ app.post('/api/customers/:id/payments', async (req, res) => {
     }
 });
 
-// ✅ Update Customer
-app.put('/api/customers/:id', async (req, res) => {
-  try {
-    const { name, phone, address, loanStartDate, totalLoanAmount, dailyPayment } = req.body;
-    
-    const customer = await Customer.findById(req.params.id);
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
-    }
-
-    customer.name = name;
-    customer.phone = phone;
-    customer.address = address;
-    customer.loanStartDate = loanStartDate;
-    customer.totalLoanAmount = totalLoanAmount;
-    customer.dailyPayment = dailyPayment;
-
-    await customer.save();
-    res.json({ message: 'Customer updated successfully', customer });
-    
-  } catch (error) {
-    console.error('Update customer error:', error);
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Phone number already exists' });
-    }
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// ✅ Delete Customer
-app.delete('/api/customers/:id', async (req, res) => {
-  try {
-    const customer = await Customer.findByIdAndDelete(req.params.id);
-    if (!customer) return res.status(404).json({ message: 'Customer not found' });
-
-    res.json({ message: 'Customer deleted successfully' });
-  } catch (error) {
-    console.error('Delete customer error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // ✅ Delete Payment
 app.delete('/api/customers/:customerId/payments/:paymentDate', async (req, res) => {
-  try {
-    const { customerId, paymentDate } = req.params;
-    const customer = await Customer.findById(customerId);
-    if (!customer) return res.status(404).json({ message: 'Customer not found' });
+    try {
+        const { customerId, paymentDate } = req.params;
+        const customer = await Customer.findById(customerId);
+        if (!customer) return res.status(404).json({ message: 'Customer not found' });
 
-    customer.payments = customer.payments.filter(p => p.date !== paymentDate);
-    await customer.save();
+        customer.payments = customer.payments.filter(p => p.date !== paymentDate);
+        await customer.save();
 
-    res.json({ message: 'Payment deleted successfully' });
-  } catch (error) {
-    console.error('Delete payment error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
+        res.json({ message: 'Payment deleted successfully' });
+    } catch (error) {
+        console.error('Delete payment error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
 // ✅ Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🌐 Health check: https://loanpro-backend.onrender.com/api/health`);
+    console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
     console.log(`🔧 CORS: Enabled for ALL origins`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
