@@ -70,10 +70,10 @@ const Owner = mongoose.model('Owner', ownerSchema);
 // ✅ Initialize Owner Account
 async function initializeOwner() {
     try {
-        const existingOwner = await Owner.findOne({ email: 'owner@loanpro.com' });
+        const existingOwner = await Owner.findOne({ email: 'aravindh@123.com' });
         if (!existingOwner) {
             console.log('👤 Creating owner account...');
-            const hashedPassword = await bcrypt.hash('admin123', 10);
+            const hashedPassword = await bcrypt.hash('aravindh2727', 10);
             const owner = new Owner({ 
                 email: 'owner@loanpro.com', 
                 password: hashedPassword 
